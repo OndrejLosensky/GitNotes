@@ -52,14 +52,8 @@ export class LoggingInterceptor implements NestInterceptor {
           const duration = Date.now() - startTime;
           const errorMessage =
             error instanceof Error ? error.message : 'Unknown error';
-          const errorStack = error instanceof Error ? error.stack : undefined;
 
-          this.logger.error(
-            `✗ ${method} ${url} - ${duration}ms - ${errorMessage}`,
-            errorStack,
-            LoggingInterceptor.name,
-          );
-          // Log to access log file
+          // Only log to access log (detailed error logging handled by HttpExceptionFilter)
           this.logger.log(
             JSON.stringify({
               type: 'access',

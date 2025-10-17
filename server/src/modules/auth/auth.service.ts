@@ -2,6 +2,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import { LoginDto, AuthResponseDto } from './dto';
+import { ERROR_MESSAGES } from '../../core/constants/error-messages.const';
 
 @Injectable()
 export class AuthService {
@@ -10,24 +12,23 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 
-  async login(password: string): Promise<{ access_token: string }> {
+  async login(loginDto: LoginDto): Promise<AuthResponseDto> {
     const hashedPassword = this.configService.get<string>('AUTH_PASSWORD');
 
     if (!hashedPassword) {
-      throw new Error('AUTH_PASSWORD is not configured');
+      throw new Error(ERROR_MESSAGES.AUTH_PASSWORD_NOT_CONFIGURED);
     }
 
-    const isValid = await bcrypt.compare(password, hashedPassword);
+    const isValid = await bcrypt.compare(loginDto.password, hashedPassword);
 
     if (!isValid) {
-      throw new UnauthorizedException('Invalid password');
+      throw new UnauthorizedException(ERROR_MESSAGES.AUTH_INVALID_PASSWORD);
     }
 
     const payload = { sub: 'user', timestamp: Date.now() };
+    const access_token = await this.jwtService.signAsync(payload);
 
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-    };
+    return new AuthResponseDto(access_token);
   }
 
   async validateToken(token: string): Promise<boolean> {

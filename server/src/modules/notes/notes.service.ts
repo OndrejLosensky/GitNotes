@@ -4,12 +4,18 @@ import {
   NotFoundException,
   BadRequestException,
   InternalServerErrorException,
+  ConflictException,
 } from '@nestjs/common';
 import { GitService } from '../git/git.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import { NoteEntity } from './entities/note.entity';
-import { NoteListDto, NoteContentDto } from './dto';
+import {
+  NoteListDto,
+  NoteContentDto,
+  CreateNoteDto,
+  UpdateNoteDto,
+} from './dto';
 import { FilePathValidator } from '../../common/utils/file-path-validator.util';
 import { ERROR_MESSAGES } from '../../core/constants/error-messages.const';
 import { APP_CONSTANTS } from '../../core/constants/app.const';
@@ -97,6 +103,186 @@ export class NotesService {
 
     this.logger.log(`Successfully read note: ${filePath}`);
     return new NoteContentDto(noteEntity, content);
+  }
+
+  createNote(dto: CreateNoteDto): NoteEntity {
+    const notesPath = this.gitService.getNotesPath();
+
+    // Validate filename
+    FilePathValidator.validateFileName(dto.name);
+
+    // Validate the path
+    let validatedPath: string;
+    try {
+      validatedPath = FilePathValidator.validatePath(
+        dto.path ? path.join(dto.path, dto.name) : dto.name,
+        notesPath,
+      );
+    } catch {
+      this.logger.warn(
+        `Invalid path for note creation: ${dto.path}/${dto.name}`,
+      );
+      throw new BadRequestException(ERROR_MESSAGES.NOTE_INVALID_PATH);
+    }
+
+    // Check if file already exists
+    if (fs.existsSync(validatedPath)) {
+      this.logger.warn(`Note already exists: ${validatedPath}`);
+      throw new ConflictException('Note already exists at this path');
+    }
+
+    // Check content size
+    const contentSize = Buffer.byteLength(dto.content, 'utf-8');
+    if (contentSize > APP_CONSTANTS.MAX_NOTE_SIZE_BYTES) {
+      throw new BadRequestException(
+        `Content size exceeds maximum allowed size of ${APP_CONSTANTS.MAX_NOTE_SIZE_MB}MB`,
+      );
+    }
+
+    // Create parent directories if they don't exist
+    const parentDir = path.dirname(validatedPath);
+    if (!fs.existsSync(parentDir)) {
+      try {
+        fs.mkdirSync(parentDir, { recursive: true });
+        this.logger.log(`Created directory: ${parentDir}`);
+      } catch (error) {
+        this.logger.error(`Failed to create directory: ${parentDir}`, error);
+        throw new InternalServerErrorException(ERROR_MESSAGES.NOTE_WRITE_ERROR);
+      }
+    }
+
+    // Write file
+    try {
+      fs.writeFileSync(validatedPath, dto.content, 'utf-8');
+    } catch (error) {
+      this.logger.error(`Failed to create note: ${validatedPath}`, error);
+      throw new InternalServerErrorException(ERROR_MESSAGES.NOTE_WRITE_ERROR);
+    }
+
+    // Get file stats
+    const stats = fs.statSync(validatedPath);
+    const relativePath = path.relative(notesPath, validatedPath);
+
+    const noteEntity = new NoteEntity({
+      name: dto.name,
+      path: relativePath,
+      size: stats.size,
+      modifiedDate: stats.mtime,
+      gitStatus: 'untracked', // New file, not yet committed
+    });
+
+    this.logger.log(`Successfully created note: ${relativePath}`);
+    return noteEntity;
+  }
+
+  updateNote(filePath: string, dto: UpdateNoteDto): NoteEntity {
+    const notesPath = this.gitService.getNotesPath();
+
+    // Validate the path
+    let validatedPath: string;
+    try {
+      validatedPath = FilePathValidator.validatePath(filePath, notesPath);
+    } catch {
+      this.logger.warn(`Invalid path for note update: ${filePath}`);
+      throw new BadRequestException(ERROR_MESSAGES.NOTE_INVALID_PATH);
+    }
+
+    // Check if file exists
+    if (!fs.existsSync(validatedPath)) {
+      this.logger.warn(`Note not found for update: ${filePath}`);
+      throw new NotFoundException(ERROR_MESSAGES.NOTE_NOT_FOUND);
+    }
+
+    // Check if it's a file
+    const existingStats = fs.statSync(validatedPath);
+    if (!existingStats.isFile()) {
+      this.logger.warn(`Path is not a file: ${filePath}`);
+      throw new BadRequestException(ERROR_MESSAGES.NOTE_INVALID_PATH);
+    }
+
+    // Check if it's a markdown file
+    if (!validatedPath.endsWith(APP_CONSTANTS.MARKDOWN_EXTENSION)) {
+      throw new BadRequestException('Only markdown files (.md) are supported');
+    }
+
+    // Check content size
+    const contentSize = Buffer.byteLength(dto.content, 'utf-8');
+    if (contentSize > APP_CONSTANTS.MAX_NOTE_SIZE_BYTES) {
+      throw new BadRequestException(
+        `Content size exceeds maximum allowed size of ${APP_CONSTANTS.MAX_NOTE_SIZE_MB}MB`,
+      );
+    }
+
+    // Update file
+    try {
+      fs.writeFileSync(validatedPath, dto.content, 'utf-8');
+    } catch (error) {
+      this.logger.error(`Failed to update note: ${filePath}`, error);
+      throw new InternalServerErrorException(ERROR_MESSAGES.NOTE_WRITE_ERROR);
+    }
+
+    // Get updated file stats
+    const stats = fs.statSync(validatedPath);
+    const fileName = path.basename(validatedPath);
+    const relativePath = path.relative(notesPath, validatedPath);
+
+    const noteEntity = new NoteEntity({
+      name: fileName,
+      path: relativePath,
+      size: stats.size,
+      modifiedDate: stats.mtime,
+      gitStatus: 'modified',
+    });
+
+    this.logger.log(`Successfully updated note: ${relativePath}`);
+    return noteEntity;
+  }
+
+  deleteNote(filePath: string): { message: string; path: string } {
+    const notesPath = this.gitService.getNotesPath();
+
+    // Validate the path
+    let validatedPath: string;
+    try {
+      validatedPath = FilePathValidator.validatePath(filePath, notesPath);
+    } catch {
+      this.logger.warn(`Invalid path for note deletion: ${filePath}`);
+      throw new BadRequestException(ERROR_MESSAGES.NOTE_INVALID_PATH);
+    }
+
+    // Check if file exists
+    if (!fs.existsSync(validatedPath)) {
+      this.logger.warn(`Note not found for deletion: ${filePath}`);
+      throw new NotFoundException(ERROR_MESSAGES.NOTE_NOT_FOUND);
+    }
+
+    // Check if it's a file
+    const stats = fs.statSync(validatedPath);
+    if (!stats.isFile()) {
+      this.logger.warn(`Path is not a file: ${filePath}`);
+      throw new BadRequestException(ERROR_MESSAGES.NOTE_INVALID_PATH);
+    }
+
+    // Check if it's a markdown file
+    if (!validatedPath.endsWith(APP_CONSTANTS.MARKDOWN_EXTENSION)) {
+      throw new BadRequestException('Only markdown files (.md) are supported');
+    }
+
+    // Delete file
+    try {
+      fs.unlinkSync(validatedPath);
+    } catch (error) {
+      this.logger.error(`Failed to delete note: ${filePath}`, error);
+      throw new InternalServerErrorException(ERROR_MESSAGES.NOTE_DELETE_ERROR);
+    }
+
+    const relativePath = path.relative(notesPath, validatedPath);
+    this.logger.log(`Successfully deleted note: ${relativePath}`);
+
+    return {
+      message: 'Note deleted successfully',
+      path: relativePath,
+    };
   }
 
   private async readMarkdownFiles(

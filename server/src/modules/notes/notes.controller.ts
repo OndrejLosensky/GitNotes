@@ -1,6 +1,10 @@
 import {
   Controller,
   Get,
+  Post,
+  Put,
+  Delete,
+  Body,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -9,7 +13,13 @@ import {
 import type { Request } from 'express';
 import { NotesService } from './notes.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { NoteListDto, NoteContentDto } from './dto';
+import {
+  NoteListDto,
+  NoteContentDto,
+  CreateNoteDto,
+  UpdateNoteDto,
+} from './dto';
+import { NoteEntity } from './entities/note.entity';
 
 @Controller('notes')
 @UseGuards(JwtAuthGuard)
@@ -33,5 +43,40 @@ export class NotesController {
       : fullPath.split('content/')[1] || '';
 
     return this.notesService.getNoteContent(filePath);
+  }
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  createNote(@Body() createNoteDto: CreateNoteDto): NoteEntity {
+    return this.notesService.createNote(createNoteDto);
+  }
+
+  @Put('*')
+  @HttpCode(HttpStatus.OK)
+  updateNote(
+    @Req() request: Request,
+    @Body() updateNoteDto: UpdateNoteDto,
+  ): NoteEntity {
+    // Extract the path after 'notes/'
+    const fullPath = request.path;
+    const notesPrefix = '/api/notes/';
+    const filePath = fullPath.startsWith(notesPrefix)
+      ? fullPath.substring(notesPrefix.length)
+      : fullPath.split('notes/')[1] || '';
+
+    return this.notesService.updateNote(filePath, updateNoteDto);
+  }
+
+  @Delete('*')
+  @HttpCode(HttpStatus.OK)
+  deleteNote(@Req() request: Request): { message: string; path: string } {
+    // Extract the path after 'notes/'
+    const fullPath = request.path;
+    const notesPrefix = '/api/notes/';
+    const filePath = fullPath.startsWith(notesPrefix)
+      ? fullPath.substring(notesPrefix.length)
+      : fullPath.split('notes/')[1] || '';
+
+    return this.notesService.deleteNote(filePath);
   }
 }

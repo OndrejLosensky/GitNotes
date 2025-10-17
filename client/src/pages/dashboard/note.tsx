@@ -17,6 +17,8 @@ export default function NotePage() {
   const [note, setNote] = useState<NoteContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState('');
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -56,6 +58,35 @@ export default function NotePage() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const handleEdit = () => {
+    setEditContent(note?.content || '');
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    if (!notePath) return;
+
+    try {
+      await apiClient.put(`/notes/${notePath}`, { content: editContent });
+      setNote({ ...note!, content: editContent });
+      setIsEditing(false);
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to update note');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!notePath) return;
+    if (!confirm('Are you sure you want to delete this note?')) return;
+
+    try {
+      await apiClient.delete(`/notes/${notePath}`);
+      navigate('/notes');
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to delete note');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -83,13 +114,29 @@ export default function NotePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto py-8 px-4">
-        <div className="mb-6">
+        <div className="mb-6 flex justify-between items-center">
           <button
             onClick={() => navigate('/notes')}
             className="text-indigo-600 hover:text-indigo-700 text-sm flex items-center gap-1"
           >
             ← Back to Notes
           </button>
+          {!isEditing && (
+            <div className="flex gap-2">
+              <button
+                onClick={handleEdit}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm"
+              >
+                Edit
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+              >
+                Delete
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -105,9 +152,34 @@ export default function NotePage() {
           </div>
 
           <div className="px-6 py-6">
-            <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 leading-relaxed">
-              {note.content}
-            </pre>
+            {isEditing ? (
+              <div>
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md font-mono text-sm"
+                  rows={20}
+                />
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={handleSave}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 leading-relaxed">
+                {note.content}
+              </pre>
+            )}
           </div>
         </div>
       </div>

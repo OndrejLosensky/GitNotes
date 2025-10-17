@@ -13,6 +13,9 @@ export default function NotesPage() {
   const [loading, setLoading] = useState(false);
   const [pulling, setPulling] = useState(false);
   const [pullMessage, setPullMessage] = useState('');
+  const [showCreate, setShowCreate] = useState(false);
+  const [newNoteName, setNewNoteName] = useState('');
+  const [newNoteContent, setNewNoteContent] = useState('');
   const navigate = useNavigate();
 
   const fetchNotes = async () => {
@@ -47,6 +50,24 @@ export default function NotesPage() {
     navigate('/login');
   };
 
+  const handleCreateNote = async () => {
+    if (!newNoteName.trim() || !newNoteContent.trim()) return;
+
+    try {
+      await apiClient.post('/notes', {
+        name: newNoteName,
+        path: '',
+        content: newNoteContent,
+      });
+      setNewNoteName('');
+      setNewNoteContent('');
+      setShowCreate(false);
+      await fetchNotes();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to create note');
+    }
+  };
+
   useEffect(() => {
     fetchNotes();
   }, []);
@@ -72,10 +93,42 @@ export default function NotesPage() {
           >
             {pulling ? 'Pulling...' : 'Pull Latest'}
           </button>
+          <button
+            onClick={() => setShowCreate(!showCreate)}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          >
+            {showCreate ? 'Cancel' : '+ New Note'}
+          </button>
           {pullMessage && (
             <span className="text-sm text-gray-600">{pullMessage}</span>
           )}
         </div>
+
+        {showCreate && (
+          <div className="mb-6 bg-white p-4 rounded-lg shadow">
+            <h3 className="font-semibold mb-3">Create New Note</h3>
+            <input
+              type="text"
+              placeholder="Note name (e.g., my-note.md)"
+              value={newNoteName}
+              onChange={(e) => setNewNoteName(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md mb-3"
+            />
+            <textarea
+              placeholder="Note content..."
+              value={newNoteContent}
+              onChange={(e) => setNewNoteContent(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md mb-3"
+              rows={6}
+            />
+            <button
+              onClick={handleCreateNote}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            >
+              Create
+            </button>
+          </div>
+        )}
 
         {loading ? (
           <div className="text-center text-gray-600">Loading notes...</div>

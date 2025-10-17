@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import simpleGit, { SimpleGit } from 'simple-git';
 import * as fs from 'fs';
 import * as path from 'path';
+import { PullResultDto } from './dto';
+import { ERROR_MESSAGES } from '../../core/constants/error-messages.const';
 
 @Injectable()
 export class GitService implements OnModuleInit {
@@ -80,7 +82,7 @@ export class GitService implements OnModuleInit {
     }
   }
 
-  async pullLatest(): Promise<{ success: boolean; message: string }> {
+  async pullLatest(): Promise<PullResultDto> {
     try {
       this.logger.log('Pulling latest changes...');
       const result = await this.git.pull();
@@ -93,23 +95,31 @@ export class GitService implements OnModuleInit {
         this.logger.log(
           `Pulled changes: ${result.summary.changes} files changed`,
         );
-        return {
+        return new PullResultDto({
           success: true,
           message: `Successfully pulled ${result.summary.changes} changes`,
-        };
+          filesChanged: result.summary.changes,
+          insertions: result.summary.insertions,
+          deletions: result.summary.deletions,
+        });
       } else {
         this.logger.log('Already up to date');
-        return {
+        return new PullResultDto({
           success: true,
           message: 'Already up to date',
-        };
+          filesChanged: 0,
+          insertions: 0,
+          deletions: 0,
+        });
       }
     } catch (error) {
       this.logger.error('Failed to pull latest changes', error);
-      return {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      return new PullResultDto({
         success: false,
-        message: `Failed to pull: ${error instanceof Error ? error.message : String(error)}`,
-      };
+        message: `${ERROR_MESSAGES.GIT_PULL_ERROR}: ${errorMessage}`,
+      });
     }
   }
 

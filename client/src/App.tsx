@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/auth/index.tsx';
 import NotesPage from './pages/dashboard/index.tsx';
+import NotePage from './pages/dashboard/note.tsx';
 import { isAuthenticated } from './utils/auth';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -17,6 +18,14 @@ function App() {
           element={
             <ProtectedRoute>
               <NotesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/note/*"
+          element={
+            <ProtectedRoute>
+              <NotePage />
             </ProtectedRoute>
           }
         />

@@ -7,6 +7,10 @@ export const APP_CONSTANTS = {
   MARKDOWN_EXTENSION: '.md',
   ALLOWED_FILE_EXTENSIONS: ['.md', '.txt'],
 
+  // Files
+  MAX_NOTE_SIZE_MB: 10, // Maximum note file size in MB
+  MAX_NOTE_SIZE_BYTES: 10 * 1024 * 1024, // 10 MB in bytes
+
   // Git
   DEFAULT_BRANCH: 'main',
   GIT_DIRECTORY: '.git',

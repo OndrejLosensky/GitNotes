@@ -17,6 +17,9 @@ logs/
 npm-debug.log*
 pnpm-debug.log*
 
+# Application log files
+server/logs/
+
 # IDE
 .vscode/
 .idea/

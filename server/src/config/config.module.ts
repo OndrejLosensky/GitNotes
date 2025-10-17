@@ -14,6 +14,9 @@ import * as Joi from 'joi';
         NOTES_PATH: Joi.string().default('./data/notes'),
         PORT: Joi.number().default(3001),
         FE_URL: Joi.string().uri().required(),
+        LOG_LEVEL: Joi.string()
+          .valid('debug', 'info', 'warn', 'error')
+          .default('info'),
       }),
     }),
   ],

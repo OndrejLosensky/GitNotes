@@ -3,3 +3,5 @@ export * from './commit.dto';
 export * from './branch.dto';
 export * from './git-history.dto';
 export * from './pull-result.dto';
+export * from './stage-files.dto';
+export * from './unstage-files.dto';

@@ -6,7 +6,7 @@ import { removeToken } from '../../utils/auth';
 interface Note {
   name: string;
   path: string;
-  gitStatus?: 'clean' | 'modified' | 'untracked';
+  gitStatus?: 'clean' | 'modified' | 'untracked' | 'staged';
 }
 
 export default function NotesPage() {
@@ -18,6 +18,7 @@ export default function NotesPage() {
   const [newNoteName, setNewNoteName] = useState('');
   const [newNoteContent, setNewNoteContent] = useState('');
   const [statusLoading, setStatusLoading] = useState(false);
+  const [stagingAll, setStagingAll] = useState(false);
   const navigate = useNavigate();
 
   const fetchNotes = async () => {
@@ -100,6 +101,19 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
     }
   };
 
+  const handleStageAll = async () => {
+    setStagingAll(true);
+    try {
+      await apiClient.post('/git/stage', { all: true });
+      alert('All changes staged successfully');
+      await fetchNotes();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to stage all changes');
+    } finally {
+      setStagingAll(false);
+    }
+  };
+
   const getStatusBadge = (status?: string) => {
     if (!status || status === 'clean') {
       return (
@@ -119,6 +133,13 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
       return (
         <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
           Untracked
+        </span>
+      );
+    }
+    if (status === 'staged') {
+      return (
+        <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+          Staged
         </span>
       );
     }
@@ -142,7 +163,7 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
           </button>
         </div>
 
-        <div className="mb-6 flex gap-4 items-center">
+        <div className="mb-6 flex gap-4 items-center flex-wrap">
           <button
             onClick={handlePull}
             disabled={pulling}
@@ -156,6 +177,13 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400"
           >
             {statusLoading ? 'Loading...' : 'Git Status'}
+          </button>
+          <button
+            onClick={handleStageAll}
+            disabled={stagingAll}
+            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-purple-400"
+          >
+            {stagingAll ? 'Staging...' : 'Stage All'}
           </button>
           <button
             onClick={() => setShowCreate(!showCreate)}

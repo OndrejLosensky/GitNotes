@@ -180,6 +180,47 @@ export class GitService implements OnModuleInit {
     }
   }
 
+  async stageFile(filePath: string): Promise<void> {
+    try {
+      // Validate file path is within notes directory
+      const resolvedPath = path.resolve(this.notesPath, filePath);
+      const notesPath = path.resolve(this.notesPath);
+
+      if (!resolvedPath.startsWith(notesPath)) {
+        throw new Error('File path is outside notes directory');
+      }
+
+      this.logger.log(`Staging file: ${filePath}`);
+      await this.git.add(filePath);
+      this.logger.log(`Successfully staged file: ${filePath}`);
+    } catch (error) {
+      this.logger.error(`Failed to stage file: ${filePath}`, error);
+      throw error;
+    }
+  }
+
+  async stageAll(): Promise<void> {
+    try {
+      this.logger.log('Staging all changes...');
+      await this.git.add('-A');
+      this.logger.log('Successfully staged all changes');
+    } catch (error) {
+      this.logger.error('Failed to stage all changes', error);
+      throw error;
+    }
+  }
+
+  async unstageFile(filePath: string): Promise<void> {
+    try {
+      this.logger.log(`Unstaging file: ${filePath}`);
+      await this.git.reset(['HEAD', '--', filePath]);
+      this.logger.log(`Successfully unstaged file: ${filePath}`);
+    } catch (error) {
+      this.logger.error(`Failed to unstage file: ${filePath}`, error);
+      throw error;
+    }
+  }
+
   private determineFileStatus(
     workingDir: string,
     index: string,

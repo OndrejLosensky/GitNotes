@@ -19,6 +19,7 @@ export default function NotePage() {
   const [error, setError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
+  const [staging, setStaging] = useState(false);
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -87,6 +88,41 @@ export default function NotePage() {
     }
   };
 
+  const handleStage = async () => {
+    if (!notePath) return;
+    setStaging(true);
+    try {
+      await apiClient.post('/git/stage', { files: [notePath] });
+      alert('File staged successfully');
+      // Refresh note to update git status
+      const response = await apiClient.get(`/notes/content/${notePath}`);
+      setNote(response.data);
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to stage file');
+    } finally {
+      setStaging(false);
+    }
+  };
+
+  const handleUnstage = async () => {
+    if (!notePath) return;
+    setStaging(true);
+    try {
+      await apiClient.post('/git/unstage', { files: [notePath] });
+      alert('File unstaged successfully');
+      // Refresh note to update git status
+      const response = await apiClient.get(`/notes/content/${notePath}`);
+      setNote(response.data);
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to unstage file');
+    } finally {
+      setStaging(false);
+    }
+  };
+
+  const showStageButton = note?.gitStatus === 'modified' || note?.gitStatus === 'untracked';
+  const showUnstageButton = note?.gitStatus === 'staged';
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -123,6 +159,24 @@ export default function NotePage() {
           </button>
           {!isEditing && (
             <div className="flex gap-2">
+              {showStageButton && (
+                <button
+                  onClick={handleStage}
+                  disabled={staging}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm disabled:bg-green-400"
+                >
+                  {staging ? 'Staging...' : 'Stage Changes'}
+                </button>
+              )}
+              {showUnstageButton && (
+                <button
+                  onClick={handleUnstage}
+                  disabled={staging}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 text-sm disabled:bg-orange-400"
+                >
+                  {staging ? 'Unstaging...' : 'Unstage'}
+                </button>
+              )}
               <button
                 onClick={handleEdit}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm"

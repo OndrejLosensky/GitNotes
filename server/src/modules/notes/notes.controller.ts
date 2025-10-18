@@ -34,7 +34,7 @@ export class NotesController {
 
   @Get('content/*')
   @HttpCode(HttpStatus.OK)
-  getNoteContent(@Req() request: Request): NoteContentDto {
+  async getNoteContent(@Req() request: Request): Promise<NoteContentDto> {
     // Extract the path after 'content/'
     const fullPath = request.path;
     const contentPrefix = '/api/notes/content/';
@@ -42,7 +42,7 @@ export class NotesController {
       ? fullPath.substring(contentPrefix.length)
       : fullPath.split('content/')[1] || '';
 
-    return this.notesService.getNoteContent(filePath);
+    return await this.notesService.getNoteContent(filePath);
   }
 
   @Post()

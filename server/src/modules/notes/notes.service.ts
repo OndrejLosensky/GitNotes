@@ -38,16 +38,28 @@ export class NotesService {
       const gitStatus: GitStatusDto = await this.gitService.getStatus();
 
       // Create a map of file paths to their git status
-      const statusMap = new Map<string, 'clean' | 'modified' | 'untracked'>();
+      const statusMap = new Map<
+        string,
+        'clean' | 'modified' | 'untracked' | 'staged'
+      >();
 
-      // Mark modified files
-      gitStatus.modified.forEach((file: GitFileStatusEntity) => {
-        statusMap.set(file.path, 'modified');
+      // Mark staged files first (highest priority)
+      gitStatus.staged.forEach((file: GitFileStatusEntity) => {
+        statusMap.set(file.path, 'staged');
       });
 
-      // Mark untracked files
+      // Mark modified files (only if not already staged)
+      gitStatus.modified.forEach((file: GitFileStatusEntity) => {
+        if (!statusMap.has(file.path)) {
+          statusMap.set(file.path, 'modified');
+        }
+      });
+
+      // Mark untracked files (only if not already staged)
       gitStatus.untracked.forEach((file: GitFileStatusEntity) => {
-        statusMap.set(file.path, 'untracked');
+        if (!statusMap.has(file.path)) {
+          statusMap.set(file.path, 'untracked');
+        }
       });
 
       // Update notes with their git status
@@ -63,7 +75,7 @@ export class NotesService {
     }
   }
 
-  getNoteContent(filePath: string): NoteContentDto {
+  async getNoteContent(filePath: string): Promise<NoteContentDto> {
     const notesPath = this.gitService.getNotesPath();
 
     // Validate the path to prevent directory traversal
@@ -117,12 +129,38 @@ export class NotesService {
     const fileName = path.basename(validatedPath);
     const relativePath = path.relative(notesPath, validatedPath);
 
+    // Get git status for this specific file
+    const gitStatus = await this.gitService.getStatus();
+    const statusMap = new Map<
+      string,
+      'clean' | 'modified' | 'untracked' | 'staged'
+    >();
+
+    // Mark staged files first (highest priority)
+    gitStatus.staged.forEach((file: GitFileStatusEntity) => {
+      statusMap.set(file.path, 'staged');
+    });
+
+    // Mark modified files (only if not already staged)
+    gitStatus.modified.forEach((file: GitFileStatusEntity) => {
+      if (!statusMap.has(file.path)) {
+        statusMap.set(file.path, 'modified');
+      }
+    });
+
+    // Mark untracked files (only if not already staged)
+    gitStatus.untracked.forEach((file: GitFileStatusEntity) => {
+      if (!statusMap.has(file.path)) {
+        statusMap.set(file.path, 'untracked');
+      }
+    });
+
     const noteEntity = new NoteEntity({
       name: fileName,
       path: relativePath,
       size: stats.size,
       modifiedDate: stats.mtime,
-      gitStatus: 'clean', // Will be implemented in future phase
+      gitStatus: statusMap.get(relativePath) || 'clean',
     });
 
     this.logger.log(`Successfully read note: ${filePath}`);

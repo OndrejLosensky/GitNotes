@@ -225,11 +225,19 @@ export class GitService implements OnModuleInit {
     try {
       // Validate commit message
       if (!message || message.trim().length < 3) {
-        throw new Error('Commit message must be at least 3 characters long');
+        return {
+          success: false,
+          hash: '',
+          message: 'Commit message must be at least 3 characters long',
+        };
       }
 
       if (message.length > 500) {
-        throw new Error('Commit message must not exceed 500 characters');
+        return {
+          success: false,
+          hash: '',
+          message: 'Commit message must not exceed 500 characters',
+        };
       }
 
       // If specific files are provided, stage them first
@@ -245,7 +253,11 @@ export class GitService implements OnModuleInit {
       const hasStagedChanges = status.staged.length > 0 || status.files.some(f => f.index !== ' ' && f.index !== '?');
 
       if (!hasStagedChanges) {
-        throw new Error('No changes staged for commit');
+        return {
+          success: false,
+          hash: '',
+          message: 'No changes staged for commit',
+        };
       }
 
       // Perform the commit
@@ -253,7 +265,11 @@ export class GitService implements OnModuleInit {
       const result = await this.git.commit(message);
 
       if (!result.commit) {
-        throw new Error('Commit failed - no commit hash returned');
+        return {
+          success: false,
+          hash: '',
+          message: 'Commit failed - no commit hash returned',
+        };
       }
 
       this.logger.log(`Successfully created commit: ${result.commit}`);
@@ -266,7 +282,76 @@ export class GitService implements OnModuleInit {
     } catch (error) {
       this.logger.error('Failed to create commit', error);
       const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(errorMessage);
+      return {
+        success: false,
+        hash: '',
+        message: errorMessage,
+      };
+    }
+  }
+
+  async push(): Promise<{ success: boolean; message: string; error?: string }> {
+    try {
+      // Check if there are commits to push
+      const status = await this.git.status();
+      if (status.ahead === 0) {
+        this.logger.log('No commits to push - already up to date');
+        return {
+          success: true,
+          message: 'Already up to date',
+        };
+      }
+
+      this.logger.log(`Pushing ${status.ahead} commits to origin/${status.current || 'main'}`);
+
+      // Set up authentication for push
+      const authenticatedUrl = this.getAuthenticatedRepoUrl();
+      await this.git.remote(['set-url', 'origin', authenticatedUrl]);
+
+      // Perform the push
+      const result = await this.git.push('origin', status.current || 'main');
+
+      this.logger.log('Successfully pushed to remote repository');
+
+      return {
+        success: true,
+        message: `Successfully pushed ${status.ahead} commits to GitHub`,
+      };
+    } catch (error) {
+      this.logger.error('Failed to push to remote repository', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      // Handle specific error cases
+      if (errorMessage.includes('Authentication failed') || errorMessage.includes('401')) {
+        return {
+          success: false,
+          message: 'GitHub token invalid or expired',
+          error: 'authentication',
+        };
+      }
+
+      if (errorMessage.includes('rejected') || errorMessage.includes('non-fast-forward')) {
+        return {
+          success: false,
+          message: 'Remote has changes. Pull first before pushing',
+          error: 'conflict',
+        };
+      }
+
+      if (errorMessage.includes('network') || errorMessage.includes('timeout') || errorMessage.includes('ENOTFOUND')) {
+        return {
+          success: false,
+          message: 'Failed to connect to GitHub',
+          error: 'network',
+        };
+      }
+
+      // Generic error
+      return {
+        success: false,
+        message: `Push failed: ${errorMessage}`,
+        error: 'unknown',
+      };
     }
   }
 

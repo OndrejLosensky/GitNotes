@@ -6,6 +6,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { GitService } from './git.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -60,12 +61,37 @@ export class GitController {
   @Post('commit')
   @HttpCode(HttpStatus.OK)
   async commit(@Body() dto: CreateCommitDto): Promise<CommitResponseDto> {
-    try {
-      const result = await this.gitService.commit(dto.message, dto.files);
-      return new CommitResponseDto(result.success, result.hash, result.message);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(errorMessage);
+    const result = await this.gitService.commit(dto.message, dto.files);
+    
+    if (!result.success) {
+      throw new HttpException(result.message, HttpStatus.BAD_REQUEST);
     }
+    
+    return new CommitResponseDto(result.success, result.hash, result.message);
+  }
+
+  @Post('push')
+  @HttpCode(HttpStatus.OK)
+  async push(): Promise<{ success: boolean; message: string; error?: string }> {
+    const result = await this.gitService.push();
+
+    if (!result.success) {
+      // Map error types to appropriate HTTP status codes
+      switch (result.error) {
+        case 'authentication':
+          throw new HttpException(result.message, HttpStatus.UNAUTHORIZED);
+        case 'conflict':
+          throw new HttpException(result.message, HttpStatus.CONFLICT);
+        case 'network':
+        case 'unknown':
+        default:
+          throw new HttpException(
+            result.message,
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+      }
+    }
+
+    return result;
   }
 }

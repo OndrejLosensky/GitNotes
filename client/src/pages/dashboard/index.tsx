@@ -22,6 +22,7 @@ export default function NotesPage() {
   const [showCommit, setShowCommit] = useState(false);
   const [commitMessage, setCommitMessage] = useState('');
   const [committing, setCommitting] = useState(false);
+  const [pushing, setPushing] = useState(false);
   const navigate = useNavigate();
 
   const fetchNotes = async () => {
@@ -139,6 +140,25 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
     }
   };
 
+  const handlePush = async () => {
+    setPushing(true);
+    try {
+      const response = await apiClient.post('/git/push');
+      alert(`Push successful! ${response.data.message}`);
+      await fetchNotes();
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Failed to push to GitHub';
+      if (error.response?.status === 409) {
+        // Conflict - suggest pulling first
+        alert(`${errorMessage}\n\nTry pulling the latest changes first.`);
+      } else {
+        alert(errorMessage);
+      }
+    } finally {
+      setPushing(false);
+    }
+  };
+
   const getStatusBadge = (status?: string) => {
     if (!status || status === 'unmodified') {
       return (
@@ -215,6 +235,13 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
             className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
           >
             {showCommit ? 'Cancel' : 'Commit'}
+          </button>
+          <button
+            onClick={handlePush}
+            disabled={pushing}
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-400"
+          >
+            {pushing ? 'Pushing...' : 'Push to GitHub'}
           </button>
           <button
             onClick={() => setShowCreate(!showCreate)}

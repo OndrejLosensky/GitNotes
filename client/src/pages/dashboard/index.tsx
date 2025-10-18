@@ -23,6 +23,9 @@ export default function NotesPage() {
   const [commitMessage, setCommitMessage] = useState('');
   const [committing, setCommitting] = useState(false);
   const [pushing, setPushing] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
   const navigate = useNavigate();
 
   const fetchNotes = async () => {
@@ -159,6 +162,39 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
     }
   };
 
+  const handleViewHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const response = await apiClient.get('/git/history?limit=20');
+      setHistory(response.data.commits || []);
+      setShowHistory(true);
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to fetch git history');
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) {
+      return 'Just now';
+    } else if (diffInHours < 24) {
+      return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    } else if (diffInHours < 48) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined 
+      });
+    }
+  };
+
   const getStatusBadge = (status?: string) => {
     if (!status || status === 'unmodified') {
       return (
@@ -244,6 +280,13 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
             {pushing ? 'Pushing...' : 'Push to GitHub'}
           </button>
           <button
+            onClick={handleViewHistory}
+            disabled={historyLoading}
+            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:bg-gray-400"
+          >
+            {historyLoading ? 'Loading...' : 'View History'}
+          </button>
+          <button
             onClick={() => setShowCreate(!showCreate)}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
           >
@@ -297,6 +340,50 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
             >
               Create
             </button>
+          </div>
+        )}
+
+        {showHistory && (
+          <div className="mb-6 bg-white p-4 rounded-lg shadow">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-semibold">Git History</h3>
+              <button
+                onClick={() => setShowHistory(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="max-h-96 overflow-y-auto">
+              {history.length === 0 ? (
+                <p className="text-gray-500">No commits found</p>
+              ) : (
+                <div className="space-y-3">
+                  {history.map((commit) => (
+                    <div key={commit.hash} className="border-b border-gray-200 pb-3 last:border-b-0">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
+                              {commit.hash.substring(0, 7)}
+                            </code>
+                            <span className="text-sm text-gray-600">
+                              {commit.author}
+                            </span>
+                          </div>
+                          <p className="text-sm font-medium text-gray-900 mb-1">
+                            {commit.message}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatDate(commit.date)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

@@ -3,8 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import simpleGit, { SimpleGit } from 'simple-git';
 import * as fs from 'fs';
 import * as path from 'path';
-import { PullResultDto, GitStatusDto } from './dto';
+import { PullResultDto, GitStatusDto, GitHistoryDto } from './dto';
 import { GitFileStatusEntity } from './entities/git-file-status.entity';
+import { CommitEntity } from './entities/commit.entity';
 import { ERROR_MESSAGES } from '../../core/constants/error-messages.const';
 
 @Injectable()
@@ -352,6 +353,40 @@ export class GitService implements OnModuleInit {
         message: `Push failed: ${errorMessage}`,
         error: 'unknown',
       };
+    }
+  }
+
+  async getCommitHistory(limit: number = 10): Promise<GitHistoryDto> {
+    try {
+      this.logger.log(`Getting commit history (limit: ${limit})`);
+      
+      // Get commit log with specified limit
+      const log = await this.git.log({
+        maxCount: limit,
+        format: {
+          hash: '%H',
+          author: '%an <%ae>',
+          date: '%ai',
+          message: '%s',
+          refs: '%D'
+        }
+      });
+
+      // Parse commits into CommitEntity objects
+      const commits = log.all.map(commit => new CommitEntity({
+        hash: commit.hash,
+        author: commit.author,
+        date: commit.date,
+        message: commit.message,
+        refs: commit.refs || undefined
+      }));
+
+      this.logger.log(`Retrieved ${commits.length} commits from history`);
+
+      return new GitHistoryDto(commits);
+    } catch (error) {
+      this.logger.error('Failed to get commit history', error);
+      throw error;
     }
   }
 

@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   HttpException,
+  Query,
 } from '@nestjs/common';
 import { GitService } from './git.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -17,6 +18,7 @@ import {
   UnstageFilesDto,
   CreateCommitDto,
   CommitResponseDto,
+  GitHistoryDto,
 } from './dto';
 
 @Controller('git')
@@ -93,5 +95,12 @@ export class GitController {
     }
 
     return result;
+  }
+
+  @Get('history')
+  @HttpCode(HttpStatus.OK)
+  async getHistory(@Query('limit') limit?: string): Promise<GitHistoryDto> {
+    const limitNumber = limit ? Math.min(parseInt(limit, 10) || 10, 50) : 10;
+    return await this.gitService.getCommitHistory(limitNumber);
   }
 }

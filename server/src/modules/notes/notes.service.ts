@@ -40,7 +40,7 @@ export class NotesService {
       // Create a map of file paths to their git status
       const statusMap = new Map<
         string,
-        'clean' | 'modified' | 'untracked' | 'staged'
+        'unmodified' | 'modified' | 'untracked' | 'staged'
       >();
 
       // Mark staged files first (highest priority)
@@ -64,7 +64,7 @@ export class NotesService {
 
       // Update notes with their git status
       notes.forEach((note: NoteEntity) => {
-        note.gitStatus = statusMap.get(note.path) || 'clean';
+        note.gitStatus = statusMap.get(note.path) || 'unmodified';
       });
 
       this.logger.log(`Found ${notes.length} markdown files with git status`);
@@ -133,7 +133,7 @@ export class NotesService {
     const gitStatus = await this.gitService.getStatus();
     const statusMap = new Map<
       string,
-      'clean' | 'modified' | 'untracked' | 'staged'
+      'unmodified' | 'modified' | 'untracked' | 'staged'
     >();
 
     // Mark staged files first (highest priority)
@@ -160,7 +160,7 @@ export class NotesService {
       path: relativePath,
       size: stats.size,
       modifiedDate: stats.mtime,
-      gitStatus: statusMap.get(relativePath) || 'clean',
+      gitStatus: statusMap.get(relativePath) || 'unmodified',
     });
 
     this.logger.log(`Successfully read note: ${filePath}`);
@@ -382,7 +382,7 @@ export class NotesService {
             path: relativePath,
             size: stats.size,
             modifiedDate: stats.mtime,
-            gitStatus: 'clean', // Will be updated by getNotes()
+            gitStatus: 'unmodified', // Will be updated by getNotes()
           }),
         );
       }

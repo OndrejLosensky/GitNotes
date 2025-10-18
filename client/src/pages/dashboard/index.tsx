@@ -6,7 +6,7 @@ import { removeToken } from '../../utils/auth';
 interface Note {
   name: string;
   path: string;
-  gitStatus?: 'clean' | 'modified' | 'untracked' | 'staged';
+  gitStatus?: 'unmodified' | 'modified' | 'untracked' | 'staged';
 }
 
 export default function NotesPage() {
@@ -115,10 +115,10 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
   };
 
   const getStatusBadge = (status?: string) => {
-    if (!status || status === 'clean') {
+    if (!status || status === 'unmodified') {
       return (
         <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-          Clean
+          Unmodified
         </span>
       );
     }

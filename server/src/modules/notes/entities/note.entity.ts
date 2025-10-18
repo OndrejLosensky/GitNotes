@@ -3,7 +3,7 @@ export class NoteEntity {
   path: string;
   size?: number;
   modifiedDate?: Date;
-  gitStatus?: 'clean' | 'modified' | 'untracked' | 'staged';
+  gitStatus?: 'unmodified' | 'modified' | 'untracked' | 'staged';
 
   constructor(partial: Partial<NoteEntity>) {
     Object.assign(this, partial);

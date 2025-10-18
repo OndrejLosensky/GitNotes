@@ -6,6 +6,7 @@ import { removeToken } from '../../utils/auth';
 interface Note {
   name: string;
   path: string;
+  gitStatus?: 'clean' | 'modified' | 'untracked';
 }
 
 export default function NotesPage() {
@@ -16,6 +17,7 @@ export default function NotesPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [newNoteName, setNewNoteName] = useState('');
   const [newNoteContent, setNewNoteContent] = useState('');
+  const [statusLoading, setStatusLoading] = useState(false);
   const navigate = useNavigate();
 
   const fetchNotes = async () => {
@@ -68,6 +70,61 @@ export default function NotesPage() {
     }
   };
 
+  const handleGitStatus = async () => {
+    setStatusLoading(true);
+    try {
+      const response = await apiClient.get('/git/status');
+      const status = response.data;
+      const statusText = `
+Git Status:
+Branch: ${status.branch}
+Ahead: ${status.ahead} | Behind: ${status.behind}
+
+Modified (${status.modified.length}):
+${status.modified.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
+
+Staged (${status.staged.length}):
+${status.staged.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
+
+Untracked (${status.untracked.length}):
+${status.untracked.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
+
+Deleted (${status.deleted.length}):
+${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
+      `.trim();
+      alert(statusText);
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to get git status');
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
+  const getStatusBadge = (status?: string) => {
+    if (!status || status === 'clean') {
+      return (
+        <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+          Clean
+        </span>
+      );
+    }
+    if (status === 'modified') {
+      return (
+        <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+          Modified
+        </span>
+      );
+    }
+    if (status === 'untracked') {
+      return (
+        <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
+          Untracked
+        </span>
+      );
+    }
+    return null;
+  };
+
   useEffect(() => {
     fetchNotes();
   }, []);
@@ -92,6 +149,13 @@ export default function NotesPage() {
             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-indigo-400"
           >
             {pulling ? 'Pulling...' : 'Pull Latest'}
+          </button>
+          <button
+            onClick={handleGitStatus}
+            disabled={statusLoading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400"
+          >
+            {statusLoading ? 'Loading...' : 'Git Status'}
           </button>
           <button
             onClick={() => setShowCreate(!showCreate)}
@@ -149,10 +213,13 @@ export default function NotesPage() {
                   className="px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {note.name}
-                      </p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-gray-900">
+                          {note.name}
+                        </p>
+                        {getStatusBadge(note.gitStatus)}
+                      </div>
                       <p className="text-sm text-gray-500">{note.path}</p>
                     </div>
                     <svg

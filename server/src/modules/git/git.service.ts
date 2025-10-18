@@ -3,7 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import simpleGit, { SimpleGit } from 'simple-git';
 import * as fs from 'fs';
 import * as path from 'path';
-import { PullResultDto } from './dto';
+import { PullResultDto, GitStatusDto } from './dto';
+import { GitFileStatusEntity } from './entities/git-file-status.entity';
 import { ERROR_MESSAGES } from '../../core/constants/error-messages.const';
 
 @Injectable()
@@ -121,6 +122,90 @@ export class GitService implements OnModuleInit {
         message: `${ERROR_MESSAGES.GIT_PULL_ERROR}: ${errorMessage}`,
       });
     }
+  }
+
+  async getStatus(): Promise<GitStatusDto> {
+    try {
+      this.logger.log('Getting git status...');
+      const status = await this.git.status();
+
+      const modified: GitFileStatusEntity[] = [];
+      const staged: GitFileStatusEntity[] = [];
+      const untracked: GitFileStatusEntity[] = [];
+      const deleted: GitFileStatusEntity[] = [];
+
+      // Process all file changes
+      for (const file of status.files) {
+        const fileStatus = new GitFileStatusEntity({
+          path: file.path,
+          status: this.determineFileStatus(file.working_dir, file.index),
+          workingDir: file.working_dir,
+          index: file.index,
+        });
+
+        // Categorize files based on their status
+        if (file.index !== ' ' && file.index !== '?') {
+          // File is staged
+          staged.push(fileStatus);
+        }
+
+        if (file.working_dir === 'M' || file.index === 'M') {
+          // File is modified
+          modified.push(fileStatus);
+        } else if (file.working_dir === '?' || file.index === '?') {
+          // File is untracked
+          untracked.push(fileStatus);
+        } else if (file.working_dir === 'D' || file.index === 'D') {
+          // File is deleted
+          deleted.push(fileStatus);
+        }
+      }
+
+      this.logger.log(
+        `Git status: ${modified.length} modified, ${staged.length} staged, ${untracked.length} untracked, ${deleted.length} deleted`,
+      );
+
+      return new GitStatusDto({
+        modified,
+        staged,
+        untracked,
+        deleted,
+        branch: status.current || 'unknown',
+        ahead: status.ahead || 0,
+        behind: status.behind || 0,
+      });
+    } catch (error) {
+      this.logger.error('Failed to get git status', error);
+      throw error;
+    }
+  }
+
+  private determineFileStatus(
+    workingDir: string,
+    index: string,
+  ): 'modified' | 'added' | 'deleted' | 'untracked' | 'staged' {
+    // Check if file is untracked
+    if (workingDir === '?' || index === '?') {
+      return 'untracked';
+    }
+
+    // Check if file is deleted
+    if (workingDir === 'D' || index === 'D') {
+      return 'deleted';
+    }
+
+    // Check if file is added
+    if (index === 'A') {
+      return 'added';
+    }
+
+    // Check if file is staged (in index but not modified in working dir)
+    if (index !== ' ' && workingDir === ' ') {
+      return 'staged';
+    }
+
+    // Default to modified
+    return 'modified';
   }
 
   getNotesPath(): string {

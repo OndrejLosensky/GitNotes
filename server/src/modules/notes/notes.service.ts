@@ -19,6 +19,8 @@ import {
 import { FilePathValidator } from '../../common/utils/file-path-validator.util';
 import { ERROR_MESSAGES } from '../../core/constants/error-messages.const';
 import { APP_CONSTANTS } from '../../core/constants/app.const';
+import { GitStatusDto } from '../git/dto/git-status.dto';
+import { GitFileStatusEntity } from '../git/entities/git-file-status.entity';
 
 @Injectable()
 export class NotesService {
@@ -31,7 +33,29 @@ export class NotesService {
 
     try {
       const notes = await this.readMarkdownFiles(notesPath);
-      this.logger.log(`Found ${notes.length} markdown files`);
+
+      // Get git status for all files
+      const gitStatus: GitStatusDto = await this.gitService.getStatus();
+
+      // Create a map of file paths to their git status
+      const statusMap = new Map<string, 'clean' | 'modified' | 'untracked'>();
+
+      // Mark modified files
+      gitStatus.modified.forEach((file: GitFileStatusEntity) => {
+        statusMap.set(file.path, 'modified');
+      });
+
+      // Mark untracked files
+      gitStatus.untracked.forEach((file: GitFileStatusEntity) => {
+        statusMap.set(file.path, 'untracked');
+      });
+
+      // Update notes with their git status
+      notes.forEach((note: NoteEntity) => {
+        note.gitStatus = statusMap.get(note.path) || 'clean';
+      });
+
+      this.logger.log(`Found ${notes.length} markdown files with git status`);
       return new NoteListDto(notes);
     } catch (error) {
       this.logger.error('Failed to read notes', error);
@@ -320,7 +344,7 @@ export class NotesService {
             path: relativePath,
             size: stats.size,
             modifiedDate: stats.mtime,
-            gitStatus: 'clean', // TODO: Get actual git status
+            gitStatus: 'clean', // Will be updated by getNotes()
           }),
         );
       }

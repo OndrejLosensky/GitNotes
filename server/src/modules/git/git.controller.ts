@@ -14,6 +14,8 @@ import {
   GitStatusDto,
   StageFilesDto,
   UnstageFilesDto,
+  CreateCommitDto,
+  CommitResponseDto,
 } from './dto';
 
 @Controller('git')
@@ -53,5 +55,17 @@ export class GitController {
       await this.gitService.unstageFile(file);
     }
     return await this.gitService.getStatus();
+  }
+
+  @Post('commit')
+  @HttpCode(HttpStatus.OK)
+  async commit(@Body() dto: CreateCommitDto): Promise<CommitResponseDto> {
+    try {
+      const result = await this.gitService.commit(dto.message, dto.files);
+      return new CommitResponseDto(result.success, result.hash, result.message);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(errorMessage);
+    }
   }
 }

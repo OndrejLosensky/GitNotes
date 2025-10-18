@@ -1,10 +1,13 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
 
 export class CreateCommitDto {
   @IsString()
   @IsNotEmpty({ message: 'Commit message is required' })
   message: string;
 
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   files?: string[]; // Specific files to commit (optional, commits all if empty)
 }
 

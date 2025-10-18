@@ -19,6 +19,9 @@ export default function NotesPage() {
   const [newNoteContent, setNewNoteContent] = useState('');
   const [statusLoading, setStatusLoading] = useState(false);
   const [stagingAll, setStagingAll] = useState(false);
+  const [showCommit, setShowCommit] = useState(false);
+  const [commitMessage, setCommitMessage] = useState('');
+  const [committing, setCommitting] = useState(false);
   const navigate = useNavigate();
 
   const fetchNotes = async () => {
@@ -114,6 +117,28 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
     }
   };
 
+  const handleCommit = async () => {
+    if (!commitMessage.trim() || commitMessage.trim().length < 3) {
+      alert('Commit message must be at least 3 characters long');
+      return;
+    }
+
+    setCommitting(true);
+    try {
+      const response = await apiClient.post('/git/commit', {
+        message: commitMessage,
+      });
+      alert(`Commit successful! Hash: ${response.data.hash.substring(0, 7)}`);
+      setCommitMessage('');
+      setShowCommit(false);
+      await fetchNotes();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to commit changes');
+    } finally {
+      setCommitting(false);
+    }
+  };
+
   const getStatusBadge = (status?: string) => {
     if (!status || status === 'unmodified') {
       return (
@@ -186,6 +211,12 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
             {stagingAll ? 'Staging...' : 'Stage All'}
           </button>
           <button
+            onClick={() => setShowCommit(!showCommit)}
+            className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+          >
+            {showCommit ? 'Cancel' : 'Commit'}
+          </button>
+          <button
             onClick={() => setShowCreate(!showCreate)}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
           >
@@ -195,6 +226,26 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
             <span className="text-sm text-gray-600">{pullMessage}</span>
           )}
         </div>
+
+        {showCommit && (
+          <div className="mb-6 bg-white p-4 rounded-lg shadow">
+            <h3 className="font-semibold mb-3">Commit Changes</h3>
+            <textarea
+              placeholder="Enter commit message (min 3 characters)..."
+              value={commitMessage}
+              onChange={(e) => setCommitMessage(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md mb-3"
+              rows={3}
+            />
+            <button
+              onClick={handleCommit}
+              disabled={committing}
+              className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:bg-orange-400"
+            >
+              {committing ? 'Committing...' : 'Commit Staged Changes'}
+            </button>
+          </div>
+        )}
 
         {showCreate && (
           <div className="mb-6 bg-white p-4 rounded-lg shadow">

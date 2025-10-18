@@ -221,6 +221,55 @@ export class GitService implements OnModuleInit {
     }
   }
 
+  async commit(message: string, files?: string[]): Promise<{ hash: string; success: boolean; message: string }> {
+    try {
+      // Validate commit message
+      if (!message || message.trim().length < 3) {
+        throw new Error('Commit message must be at least 3 characters long');
+      }
+
+      if (message.length > 500) {
+        throw new Error('Commit message must not exceed 500 characters');
+      }
+
+      // If specific files are provided, stage them first
+      if (files && files.length > 0) {
+        this.logger.log(`Staging ${files.length} specific files before commit`);
+        for (const file of files) {
+          await this.stageFile(file);
+        }
+      }
+
+      // Check if there are staged changes
+      const status = await this.git.status();
+      const hasStagedChanges = status.staged.length > 0 || status.files.some(f => f.index !== ' ' && f.index !== '?');
+
+      if (!hasStagedChanges) {
+        throw new Error('No changes staged for commit');
+      }
+
+      // Perform the commit
+      this.logger.log(`Creating commit with message: "${message}"`);
+      const result = await this.git.commit(message);
+
+      if (!result.commit) {
+        throw new Error('Commit failed - no commit hash returned');
+      }
+
+      this.logger.log(`Successfully created commit: ${result.commit}`);
+
+      return {
+        success: true,
+        hash: result.commit,
+        message: `Successfully committed changes with hash: ${result.commit.substring(0, 7)}`,
+      };
+    } catch (error) {
+      this.logger.error('Failed to create commit', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(errorMessage);
+    }
+  }
+
   private determineFileStatus(
     workingDir: string,
     index: string,

@@ -7,8 +7,8 @@ export default function GitTab() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 py-2">
-        <h2 className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+        <h2 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
           Source Control
         </h2>
       </div>
@@ -19,10 +19,10 @@ export default function GitTab() {
       </div>
 
       {/* Actions */}
-      <div className="border-t border-gray-200 p-3">
+      <div className="border-t border-gray-200 p-3 bg-gray-50">
         <button
           onClick={() => setShowHistory(!showHistory)}
-          className="w-full px-3 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-700"
+          className="w-full px-3 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors"
         >
           {showHistory ? 'Hide History' : 'View History'}
         </button>

@@ -19,7 +19,7 @@ export default function RecentCommits() {
     };
 
     fetchCommits();
-  }, []);
+  }, []); 
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -49,23 +49,23 @@ export default function RecentCommits() {
 
   return (
     <div className="py-2">
-      <div className="px-4 py-1">
-        <h3 className="text-xs font-medium text-gray-500">
-          Recent Commits
+      <div className="px-4 py-2 border-b border-gray-200 bg-gray-50">
+        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+          History
         </h3>
       </div>
       <div className="space-y-2 px-4 py-2">
         {commits.map((commit) => (
-          <div key={commit.hash} className="text-xs">
-            <div className="flex items-center gap-2">
-              <code className="text-[10px] bg-gray-100 px-1 rounded font-mono">
+          <div key={commit.hash} className="text-xs py-1">
+            <div className="flex items-center gap-2 mb-1">
+              <code className="text-[10px] bg-gray-100 px-1 rounded font-mono text-gray-600">
                 {commit.hash.substring(0, 7)}
               </code>
               <span className="text-gray-500 text-[10px]">
                 {formatDate(commit.date)}
               </span>
             </div>
-            <p className="text-gray-700 truncate mt-1">{commit.message}</p>
+            <p className="text-gray-700 truncate text-sm font-medium">{commit.message}</p>
             <p className="text-gray-400 text-[10px]">{commit.author}</p>
           </div>
         ))}

@@ -148,55 +148,13 @@ export default function NotePage() {
   }
 
   return (
-    <div className="h-full bg-gray-50 overflow-y-auto">
-      <div className="max-w-4xl mx-auto py-8 px-4">
-        <div className="mb-6 flex justify-between items-center">
-          <button
-            onClick={() => navigate('/notes')}
-            className="text-indigo-600 hover:text-indigo-700 text-sm flex items-center gap-1"
-          >
-            ← Back to Notes
-          </button>
-          {!isEditing && (
-            <div className="flex gap-2">
-              {showStageButton && (
-                <button
-                  onClick={handleStage}
-                  disabled={staging}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm disabled:bg-green-400"
-                >
-                  {staging ? 'Staging...' : 'Stage Changes'}
-                </button>
-              )}
-              {showUnstageButton && (
-                <button
-                  onClick={handleUnstage}
-                  disabled={staging}
-                  className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 text-sm disabled:bg-orange-400"
-                >
-                  {staging ? 'Unstaging...' : 'Unstage'}
-                </button>
-              )}
-              <button
-                onClick={handleEdit}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm"
-              >
-                Edit
-              </button>
-              <button
-                onClick={handleDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
-              >
-                Delete
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          <div className="border-b border-gray-200 px-6 py-4 bg-gray-50">
-            <h1 className="text-2xl font-bold text-gray-900">{note.name}</h1>
-            <div className="mt-2 flex gap-4 text-sm text-gray-500">
+    <div className="h-full bg-white flex flex-col">
+      {/* Header */}
+      <div className="border-b border-gray-200 bg-white px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">{note.name}</h1>
+            <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
               <span>{note.path}</span>
               {note.size && <span>{formatSize(note.size)}</span>}
               {note.modifiedDate && (
@@ -205,37 +163,106 @@ export default function NotePage() {
             </div>
           </div>
 
-          <div className="px-6 py-6">
-            {isEditing ? (
-              <div>
-                <textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md font-mono text-sm"
-                  rows={20}
-                />
-                <div className="mt-4 flex gap-2">
+          {/* Action buttons */}
+          <div className="flex items-center gap-2">
+            {!isEditing ? (
+              <>
+                {/* Stage/Unstage button */}
+                {showStageButton && (
                   <button
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                    onClick={handleStage}
+                    disabled={staging}
+                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                    title="Stage changes"
                   >
-                    Save
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
                   </button>
+                )}
+                {showUnstageButton && (
                   <button
-                    onClick={() => setIsEditing(false)}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                    onClick={handleUnstage}
+                    disabled={staging}
+                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                    title="Unstage changes"
                   >
-                    Cancel
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
                   </button>
-                </div>
-              </div>
+                )}
+
+                {/* Edit button */}
+                <button
+                  onClick={handleEdit}
+                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                  title="Edit note"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+
+                {/* Delete button */}
+                <button
+                  onClick={handleDelete}
+                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                  title="Delete note"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </>
             ) : (
-              <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 leading-relaxed">
-                {note.content}
-              </pre>
+              <>
+                {/* Cancel button */}
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="px-3 py-2 text-gray-600 hover:text-gray-800 text-sm transition-colors"
+                >
+                  Cancel
+                </button>
+
+                {/* Save button - Primary action */}
+                <button
+                  onClick={handleSave}
+                  className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Save Changes
+                </button>
+              </>
             )}
           </div>
         </div>
+      </div>
+
+      {/* Content area */}
+      <div className="flex-1 overflow-hidden">
+        {isEditing ? (
+          <div className="h-full flex flex-col">
+            <div className="flex-1 p-6">
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="w-full h-full px-4 py-3 border border-gray-300 rounded-md font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Start writing your note..."
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="h-full overflow-y-auto p-6">
+            <div className="max-w-none">
+              <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 leading-relaxed">
+                {note.content || 'No content yet. Click Edit to start writing.'}
+              </pre>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

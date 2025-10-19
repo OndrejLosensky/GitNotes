@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import apiClient from '../../api/client';
+import apiClient from '../../../api/client';
 
 interface NoteContent {
   name: string;
@@ -125,7 +125,7 @@ export default function NotePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center h-full">
         <div className="text-gray-600">Loading note...</div>
       </div>
     );
@@ -133,7 +133,7 @@ export default function NotePage() {
 
   if (error || !note) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error || 'Note not found'}</p>
           <button
@@ -148,7 +148,7 @@ export default function NotePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-full bg-gray-50 overflow-y-auto">
       <div className="max-w-4xl mx-auto py-8 px-4">
         <div className="mb-6 flex justify-between items-center">
           <button

@@ -1,1 +1,7 @@
 @import "tailwindcss";
+
+/* Import custom styles */
+@import "./styles/layout.css";
+@import "./styles/sidebar.css";
+@import "./styles/notes.css";
+@import "./styles/git.css";

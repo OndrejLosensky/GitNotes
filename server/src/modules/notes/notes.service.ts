@@ -15,6 +15,9 @@ import {
   NoteContentDto,
   CreateNoteDto,
   UpdateNoteDto,
+  FolderTreeDto,
+  FolderTreeNode,
+  CreateFolderDto,
 } from './dto';
 import { FilePathValidator } from '../../common/utils/file-path-validator.util';
 import { ERROR_MESSAGES } from '../../core/constants/error-messages.const';
@@ -389,5 +392,160 @@ export class NotesService {
     }
 
     return notes;
+  }
+
+  getNotesPath(): string {
+    return this.gitService.getNotesPath();
+  }
+
+  async getFolderTree(): Promise<FolderTreeDto> {
+    const notesPath = this.gitService.getNotesPath();
+
+    try {
+      this.logger.log('Building folder tree structure');
+      
+      // Get git status for all files
+      const gitStatus: GitStatusDto = await this.gitService.getStatus();
+      const statusMap = new Map<string, 'unmodified' | 'modified' | 'untracked' | 'staged'>();
+      
+      // Build status map
+      gitStatus.staged.forEach((file: GitFileStatusEntity) => {
+        statusMap.set(file.path, 'staged');
+      });
+      gitStatus.modified.forEach((file: GitFileStatusEntity) => {
+        if (!statusMap.has(file.path)) statusMap.set(file.path, 'modified');
+      });
+      gitStatus.untracked.forEach((file: GitFileStatusEntity) => {
+        if (!statusMap.has(file.path)) statusMap.set(file.path, 'untracked');
+      });
+
+      const tree = await this.buildFolderTree(notesPath, '', statusMap);
+      
+      this.logger.log(`Built folder tree with ${this.countNodes(tree)} total items`);
+      
+      return new FolderTreeDto(tree);
+    } catch (error) {
+      this.logger.error('Failed to build folder tree', error);
+      throw new InternalServerErrorException(
+        `${ERROR_MESSAGES.FOLDER_TREE_ERROR}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async buildFolderTree(
+    basePath: string,
+    relativePath: string,
+    statusMap: Map<string, 'unmodified' | 'modified' | 'untracked' | 'staged'>
+  ): Promise<FolderTreeNode[]> {
+    const fullPath = relativePath ? path.join(basePath, relativePath) : basePath;
+    
+    if (!fs.existsSync(fullPath) || !fs.statSync(fullPath).isDirectory()) {
+      return [];
+    }
+
+    const items = fs.readdirSync(fullPath);
+    const tree: FolderTreeNode[] = [];
+
+    // Separate directories and files
+    const directories: string[] = [];
+    const files: string[] = [];
+
+    for (const item of items) {
+      if (item.startsWith('.')) continue; // Skip hidden files/folders
+      
+      const itemPath = relativePath ? path.join(relativePath, item) : item;
+      const fullItemPath = path.join(basePath, itemPath);
+      
+      if (fs.statSync(fullItemPath).isDirectory()) {
+        directories.push(item);
+      } else if (item.endsWith('.md')) {
+        files.push(item);
+      }
+    }
+
+    // Add directories first
+    for (const dir of directories.sort()) {
+      const dirPath = relativePath ? path.join(relativePath, dir) : dir;
+      const children = await this.buildFolderTree(basePath, dirPath, statusMap);
+      
+      tree.push(new FolderTreeNode({
+        name: dir,
+        type: 'folder',
+        path: dirPath,
+        children: children,
+      }));
+    }
+
+    // Add files
+    for (const file of files.sort()) {
+      const filePath = relativePath ? path.join(relativePath, file) : file;
+      const gitStatus = statusMap.get(filePath) || 'unmodified';
+      
+      tree.push(new FolderTreeNode({
+        name: file,
+        type: 'file',
+        path: filePath,
+        gitStatus: gitStatus,
+      }));
+    }
+
+    return tree;
+  }
+
+  private countNodes(nodes: FolderTreeNode[]): number {
+    let count = nodes.length;
+    for (const node of nodes) {
+      if (node.children) {
+        count += this.countNodes(node.children);
+      }
+    }
+    return count;
+  }
+
+  async createFolder(createFolderDto: CreateFolderDto): Promise<{ success: boolean; message: string }> {
+    try {
+      const { name, parentPath = '' } = createFolderDto;
+      
+      // Validate folder name
+      if (!FilePathValidator.isValidFolderName(name)) {
+        throw new BadRequestException('Invalid folder name');
+      }
+
+      const notesPath = this.gitService.getNotesPath();
+      const fullParentPath = parentPath ? path.join(notesPath, parentPath) : notesPath;
+      const newFolderPath = path.join(fullParentPath, name);
+
+      // Check if parent path exists
+      if (!fs.existsSync(fullParentPath)) {
+        throw new NotFoundException('Parent folder does not exist');
+      }
+
+      // Check if folder already exists
+      if (fs.existsSync(newFolderPath)) {
+        throw new ConflictException('Folder already exists');
+      }
+
+      // Create the folder
+      fs.mkdirSync(newFolderPath, { recursive: true });
+
+      this.logger.log(`Created folder: ${path.join(parentPath, name)}`);
+
+      return {
+        success: true,
+        message: `Successfully created folder: ${path.join(parentPath, name)}`,
+      };
+    } catch (error) {
+      this.logger.error('Failed to create folder', error);
+      
+      if (error instanceof BadRequestException || 
+          error instanceof NotFoundException || 
+          error instanceof ConflictException) {
+        throw error;
+      }
+      
+      throw new InternalServerErrorException(
+        `${ERROR_MESSAGES.FOLDER_CREATE_ERROR}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 }

@@ -21,4 +21,8 @@ export const ERROR_MESSAGES = {
 
   // Config
   CONFIG_MISSING_ENV: 'Required environment variable is missing',
+
+  // Folders
+  FOLDER_TREE_ERROR: 'Failed to build folder tree',
+  FOLDER_CREATE_ERROR: 'Failed to create folder',
 } as const;

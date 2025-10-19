@@ -18,6 +18,8 @@ import {
   NoteContentDto,
   CreateNoteDto,
   UpdateNoteDto,
+  FolderTreeDto,
+  CreateFolderDto,
 } from './dto';
 import { NoteEntity } from './entities/note.entity';
 
@@ -78,5 +80,17 @@ export class NotesController {
       : fullPath.split('notes/')[1] || '';
 
     return this.notesService.deleteNote(filePath);
+  }
+
+  @Get('tree')
+  @HttpCode(HttpStatus.OK)
+  async getFolderTree(): Promise<FolderTreeDto> {
+    return await this.notesService.getFolderTree();
+  }
+
+  @Post('folders')
+  @HttpCode(HttpStatus.OK)
+  async createFolder(@Body() createFolderDto: CreateFolderDto): Promise<{ success: boolean; message: string }> {
+    return await this.notesService.createFolder(createFolderDto);
   }
 }

@@ -45,4 +45,22 @@ export class FilePathValidator {
       throw new BadRequestException('Invalid file name');
     }
   }
+
+  /**
+   * Validates folder name doesn't contain dangerous characters
+   */
+  static isValidFolderName(folderName: string): boolean {
+    // eslint-disable-next-line no-control-regex
+    const dangerousChars = /[<>:"|?*\u0000-\u001f]/;
+
+    if (dangerousChars.test(folderName)) {
+      return false;
+    }
+
+    if (folderName === '.' || folderName === '..' || folderName.trim() === '') {
+      return false;
+    }
+
+    return true;
+  }
 }

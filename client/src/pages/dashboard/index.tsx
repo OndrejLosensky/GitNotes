@@ -9,8 +9,17 @@ interface Note {
   gitStatus?: 'unmodified' | 'modified' | 'untracked' | 'staged';
 }
 
+interface TreeNode {
+  name: string;
+  type: 'file' | 'folder';
+  path: string;
+  children?: TreeNode[];
+  gitStatus?: 'unmodified' | 'modified' | 'untracked' | 'staged';
+}
+
 export default function NotesPage() {
   const [notes, setNotes] = useState<Note[]>([]);
+  const [notesTree, setNotesTree] = useState<TreeNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [pulling, setPulling] = useState(false);
   const [pullMessage, setPullMessage] = useState('');
@@ -26,13 +35,24 @@ export default function NotesPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
+  const [showTree, setShowTree] = useState(false);
+  const [treeLoading, setTreeLoading] = useState(false);
+  const [tree, setTree] = useState<any[]>([]);
+  const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [creatingFolder, setCreatingFolder] = useState(false);
   const navigate = useNavigate();
 
   const fetchNotes = async () => {
     setLoading(true);
     try {
-      const response = await apiClient.get('/notes');
-      setNotes(response.data.notes || []);
+      // Fetch both flat notes and tree structure
+      const [notesResponse, treeResponse] = await Promise.all([
+        apiClient.get('/notes'),
+        apiClient.get('/notes/tree')
+      ]);
+      setNotes(notesResponse.data.notes || []);
+      setNotesTree(treeResponse.data.tree || []);
     } catch (error) {
       console.error('Failed to fetch notes:', error);
     } finally {
@@ -195,6 +215,143 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
     }
   };
 
+  const handleViewTree = async () => {
+    setTreeLoading(true);
+    try {
+      const response = await apiClient.get('/notes/tree');
+      setTree(response.data.tree || []);
+      setShowTree(true);
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to fetch folder tree');
+    } finally {
+      setTreeLoading(false);
+    }
+  };
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) {
+      alert('Folder name is required');
+      return;
+    }
+
+    setCreatingFolder(true);
+    try {
+      const response = await apiClient.post('/notes/folders', {
+        name: newFolderName,
+        parentPath: '', // Create in root for now
+      });
+      alert(`Folder created successfully! ${response.data.message}`);
+      setNewFolderName('');
+      setShowCreateFolder(false);
+      await fetchNotes();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to create folder');
+    } finally {
+      setCreatingFolder(false);
+    }
+  };
+
+  const renderTreeNode = (node: any, level = 0) => {
+    const indent = '  '.repeat(level);
+    const icon = node.type === 'folder' ? '📁' : '📄';
+    const statusBadge = node.gitStatus && node.gitStatus !== 'unmodified' ? (
+      <span className={`ml-2 px-1 py-0.5 text-xs rounded ${
+        node.gitStatus === 'staged' ? 'bg-blue-100 text-blue-800' :
+        node.gitStatus === 'modified' ? 'bg-yellow-100 text-yellow-800' :
+        node.gitStatus === 'untracked' ? 'bg-gray-100 text-gray-800' :
+        'bg-green-100 text-green-800'
+      }`}>
+        {node.gitStatus}
+      </span>
+    ) : null;
+
+    return (
+      <div key={node.path} className="text-sm">
+        <div className="flex items-center">
+          <span className="font-mono text-gray-500">{indent}</span>
+          <span>{icon}</span>
+          <span className="ml-1">{node.name}</span>
+          {statusBadge}
+        </div>
+        {node.children && node.children.map((child: any) => renderTreeNode(child, level + 1))}
+      </div>
+    );
+  };
+
+  const renderNotesTree = (node: TreeNode, level = 0) => {
+    const isFile = node.type === 'file';
+    const indentPx = level * 20; // 20px per level
+    
+    return (
+      <div key={node.path}>
+        <li
+          onClick={() => isFile && navigate(`/note/${node.path}`)}
+          className={`px-6 py-4 hover:bg-gray-50 transition-colors ${
+            isFile ? 'cursor-pointer' : 'cursor-default'
+          }`}
+          style={{ paddingLeft: `${24 + indentPx}px` }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="mr-2">
+                  {node.type === 'folder' ? '📁' : '📄'}
+                </span>
+                <p className="text-sm font-medium text-gray-900">
+                  {node.name}
+                </p>
+                {node.gitStatus && (
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    node.gitStatus === 'staged' ? 'bg-blue-100 text-blue-800' :
+                    node.gitStatus === 'modified' ? 'bg-yellow-100 text-yellow-800' :
+                    node.gitStatus === 'untracked' ? 'bg-gray-100 text-gray-800' :
+                    'bg-green-100 text-green-800'
+                  }`}>
+                    {node.gitStatus}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-500">{node.path}</p>
+            </div>
+            {isFile && (
+              <svg
+                className="w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            )}
+          </div>
+        </li>
+        {node.children && (
+          <ul className="divide-y divide-gray-200">
+            {node.children.map((child) => renderNotesTree(child, level + 1))}
+          </ul>
+        )}
+      </div>
+    );
+  };
+
+  const countFilesInTree = (nodes: TreeNode[]): number => {
+    let count = 0;
+    for (const node of nodes) {
+      if (node.type === 'file') {
+        count++;
+      }
+      if (node.children) {
+        count += countFilesInTree(node.children);
+      }
+    }
+    return count;
+  };
+
   const getStatusBadge = (status?: string) => {
     if (!status || status === 'unmodified') {
       return (
@@ -287,6 +444,19 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
             {historyLoading ? 'Loading...' : 'View History'}
           </button>
           <button
+            onClick={handleViewTree}
+            disabled={treeLoading}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-indigo-400"
+          >
+            {treeLoading ? 'Loading...' : 'View Tree'}
+          </button>
+          <button
+            onClick={() => setShowCreateFolder(!showCreateFolder)}
+            className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700"
+          >
+            {showCreateFolder ? 'Cancel' : '+ New Folder'}
+          </button>
+          <button
             onClick={() => setShowCreate(!showCreate)}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
           >
@@ -343,6 +513,49 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
           </div>
         )}
 
+        {showCreateFolder && (
+          <div className="mb-6 bg-white p-4 rounded-lg shadow">
+            <h3 className="font-semibold mb-3">Create New Folder</h3>
+            <input
+              type="text"
+              placeholder="Folder name..."
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md mb-3"
+            />
+            <button
+              onClick={handleCreateFolder}
+              disabled={creatingFolder}
+              className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 disabled:bg-teal-400"
+            >
+              {creatingFolder ? 'Creating...' : 'Create Folder'}
+            </button>
+          </div>
+        )}
+
+        {showTree && (
+          <div className="mb-6 bg-white p-4 rounded-lg shadow">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-semibold">Folder Tree</h3>
+              <button
+                onClick={() => setShowTree(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="max-h-96 overflow-y-auto font-mono text-sm">
+              {tree.length === 0 ? (
+                <p className="text-gray-500">No files or folders found</p>
+              ) : (
+                <div className="space-y-1">
+                  {tree.map((node) => renderTreeNode(node))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {showHistory && (
           <div className="mb-6 bg-white p-4 rounded-lg shadow">
             <div className="flex justify-between items-center mb-3">
@@ -389,7 +602,7 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
 
         {loading ? (
           <div className="text-center text-gray-600">Loading notes...</div>
-        ) : notes.length === 0 ? (
+        ) : notesTree.length === 0 ? (
           <div className="text-center text-gray-600 py-12">
             <p className="text-lg">No notes found</p>
             <p className="text-sm mt-2">
@@ -399,44 +612,13 @@ ${status.deleted.map((f: any) => `  - ${f.path}`).join('\n') || '  (none)'}
         ) : (
           <div className="bg-white shadow rounded-lg overflow-hidden">
             <ul className="divide-y divide-gray-200">
-              {notes.map((note, index) => (
-                <li
-                  key={index}
-                  onClick={() => navigate(`/note/${note.path}`)}
-                  className="px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-gray-900">
-                          {note.name}
-                        </p>
-                        {getStatusBadge(note.gitStatus)}
-                      </div>
-                      <p className="text-sm text-gray-500">{note.path}</p>
-                    </div>
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </div>
-                </li>
-              ))}
+              {notesTree.map((node) => renderNotesTree(node))}
             </ul>
           </div>
         )}
 
         <div className="mt-6 text-sm text-gray-500">
-          Total notes: {notes.length}
+          Total notes: {countFilesInTree(notesTree)}
         </div>
       </div>
     </div>

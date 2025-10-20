@@ -18,6 +18,7 @@ import {
   FolderTreeDto,
   FolderTreeNode,
   CreateFolderDto,
+  SearchResultDto,
 } from './dto';
 import { FilePathValidator } from '../../common/utils/file-path-validator.util';
 import { ERROR_MESSAGES } from '../../core/constants/error-messages.const';
@@ -547,5 +548,99 @@ export class NotesService {
         `${ERROR_MESSAGES.FOLDER_CREATE_ERROR}: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+  }
+
+  async searchNotes(query: string, folderPath?: string): Promise<SearchResultDto[]> {
+    try {
+      if (!query || query.trim().length < 2) {
+        return [];
+      }
+
+      const notesPath = this.gitService.getNotesPath();
+      const searchPath = folderPath ? path.join(notesPath, folderPath) : notesPath;
+      
+      if (!fs.existsSync(searchPath)) {
+        return [];
+      }
+
+      const results: SearchResultDto[] = [];
+      const searchRegex = new RegExp(query.trim(), 'gi');
+
+      // Recursively search through files
+      await this.searchInDirectory(searchPath, searchRegex, results, notesPath);
+
+      // Sort by match count (relevance) and limit results
+      return results
+        .sort((a, b) => b.matches - a.matches)
+        .slice(0, 50);
+    } catch (error) {
+      this.logger.error('Failed to search notes', error);
+      throw new InternalServerErrorException('Search failed');
+    }
+  }
+
+  private async searchInDirectory(
+    dirPath: string,
+    searchRegex: RegExp,
+    results: SearchResultDto[],
+    basePath: string,
+  ): Promise<void> {
+    try {
+      const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const fullPath = path.join(dirPath, entry.name);
+        const relativePath = path.relative(basePath, fullPath);
+
+        if (entry.isDirectory()) {
+          // Recursively search subdirectories
+          await this.searchInDirectory(fullPath, searchRegex, results, basePath);
+        } else if (entry.isFile() && this.isMarkdownFile(entry.name)) {
+          // Search in markdown files
+          await this.searchInFile(fullPath, relativePath, searchRegex, results);
+        }
+      }
+    } catch (error) {
+      this.logger.warn(`Failed to read directory: ${dirPath}`, error);
+    }
+  }
+
+  private async searchInFile(
+    filePath: string,
+    relativePath: string,
+    searchRegex: RegExp,
+    results: SearchResultDto[],
+  ): Promise<void> {
+    try {
+      // Skip large files (>1MB)
+      const stats = fs.statSync(filePath);
+      if (stats.size > 1024 * 1024) {
+        return;
+      }
+
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const matches = content.match(searchRegex);
+
+      if (matches && matches.length > 0) {
+        // Find the first match and create a snippet
+        const firstMatchIndex = content.toLowerCase().indexOf(matches[0].toLowerCase());
+        const snippetStart = Math.max(0, firstMatchIndex - 50);
+        const snippetEnd = Math.min(content.length, firstMatchIndex + matches[0].length + 50);
+        const snippet = content.substring(snippetStart, snippetEnd);
+
+        results.push(new SearchResultDto({
+          path: relativePath.replace(/\\/g, '/'), // Normalize path separators
+          name: path.basename(relativePath),
+          snippet: snippet.trim(),
+          matches: matches.length,
+        }));
+      }
+    } catch (error) {
+      this.logger.warn(`Failed to search in file: ${filePath}`, error);
+    }
+  }
+
+  private isMarkdownFile(fileName: string): boolean {
+    return fileName.toLowerCase().endsWith('.md');
   }
 }

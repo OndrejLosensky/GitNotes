@@ -51,4 +51,11 @@ export interface BranchList {
   current: string;
 }
 
+export interface SearchResult {
+  path: string;
+  name: string;
+  snippet: string;
+  matches: number;
+}
+
 export type TabType = 'notes' | 'git';

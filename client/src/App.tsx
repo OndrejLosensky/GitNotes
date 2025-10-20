@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/auth/index.tsx';
 import NotesPage from './pages/dashboard/index.tsx';
 import NotePage from './pages/dashboard/note/index.tsx';
+import SettingsPage from './pages/settings/index.tsx';
 import MainLayout from './components/layout/MainLayout.tsx';
 import { isAuthenticated } from './utils/auth';
 
@@ -30,6 +31,16 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <NotePage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <SettingsPage />
               </MainLayout>
             </ProtectedRoute>
           }

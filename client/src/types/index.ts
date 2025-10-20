@@ -5,7 +5,7 @@ export interface Note {
   path: string;
   size?: number;
   modifiedDate?: string;
-  gitStatus?: 'unmodified' | 'modified' | 'untracked' | 'staged';
+  gitStatus?: 'unmodified' | 'modified' | 'untracked' | 'staged' | 'added' | 'deleted';
   content?: string;
 }
 
@@ -14,7 +14,7 @@ export interface TreeNode {
   type: 'file' | 'folder';
   path: string;
   children?: TreeNode[];
-  gitStatus?: 'unmodified' | 'modified' | 'untracked' | 'staged';
+  gitStatus?: 'unmodified' | 'modified' | 'untracked' | 'staged' | 'added' | 'deleted';
 }
 
 export interface GitStatus {

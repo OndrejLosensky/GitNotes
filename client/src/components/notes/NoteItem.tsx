@@ -24,25 +24,62 @@ export default function NoteItem({ node, level }: NoteItemProps) {
     }
   };
 
+  const getIconColor = () => {
+    switch (node.gitStatus) {
+      case 'modified':
+        return 'text-yellow-500';
+      case 'added':
+        return 'text-green-500';
+      case 'untracked':
+        return 'text-gray-500';
+      case 'staged':
+        return 'text-gray-500';
+      case 'deleted':
+        return 'text-red-500';
+      case 'unmodified':
+      default:
+        return 'text-gray-500';
+    }
+  };
+
+  const getBackgroundColor = () => {
+    switch (node.gitStatus) {
+      case 'modified':
+        return 'bg-yellow-50';
+      case 'added':
+        return 'bg-green-50';
+      case 'untracked':
+        return 'bg-gray-50';
+      case 'staged':
+        return 'bg-gray-50';
+      case 'deleted':
+        return 'bg-red-50';
+      case 'unmodified':
+      default:
+        return '';
+    }
+  };
+
   const getFileIcon = (fileName: string) => {
     const extension = fileName.split('.').pop()?.toLowerCase();
+    const iconColor = getIconColor();
     
     switch (extension) {
       case 'md':
         return (
-          <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+          <svg className={`w-4 h-4 ${iconColor} flex-shrink-0`} fill="currentColor" viewBox="0 0 24 24">
             <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
           </svg>
         );
       case 'txt':
         return (
-          <svg className="w-4 h-4 text-gray-600 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+          <svg className={`w-4 h-4 ${iconColor} flex-shrink-0`} fill="currentColor" viewBox="0 0 24 24">
             <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
           </svg>
         );
       default:
         return (
-          <svg className="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className={`w-4 h-4 ${iconColor} flex-shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         );
@@ -58,7 +95,7 @@ export default function NoteItem({ node, level }: NoteItemProps) {
         className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer group transition-all duration-150 ${
           isActive 
             ? 'bg-indigo-50 border-r-2 border-indigo-500 text-indigo-700' 
-            : 'hover:bg-gray-50 text-gray-700'
+            : `hover:bg-gray-50 text-gray-700 ${getBackgroundColor()}`
         }`}
         style={{ paddingLeft: `${paddingLeft}px` }}
       >
@@ -92,9 +129,7 @@ export default function NoteItem({ node, level }: NoteItemProps) {
         <div className="flex-shrink-0">
           {isFolder ? (
             <svg 
-              className={`w-4 h-4 transition-colors duration-150 ${
-                isExpanded ? 'text-blue-600' : 'text-gray-500'
-              }`}
+              className={`w-4 h-4 transition-colors duration-150 ${getIconColor()}`}
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"

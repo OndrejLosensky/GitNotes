@@ -1,5 +1,5 @@
 interface StatusDotProps {
-  status?: 'unmodified' | 'modified' | 'untracked' | 'staged' | 'deleted';
+  status?: 'unmodified' | 'modified' | 'untracked' | 'staged' | 'deleted' | 'added';
   size?: 'sm' | 'md' | 'lg';
 }
 
@@ -13,11 +13,12 @@ export default function StatusDot({ status, size = 'sm' }: StatusDotProps) {
   };
 
   const colorClasses = {
-    modified: 'bg-yellow-400',
-    untracked: 'bg-gray-400',
-    staged: 'bg-blue-400',
+    modified: 'bg-yellow-400',  // Yellow for modified files
+    untracked: 'bg-gray-400',   // Gray for untracked files
+    added: 'bg-green-400',      // Green for new added files
+    staged: 'bg-gray-400',      // Gray for staged files
     deleted: 'bg-red-400',
-    unmodified: 'bg-green-400',
+    unmodified: 'bg-gray-400',  // Gray for unchanged files
   };
 
   return (

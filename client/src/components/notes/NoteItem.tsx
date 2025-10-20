@@ -63,7 +63,7 @@ export default function NoteItem({ node, level }: NoteItemProps) {
         style={{ paddingLeft: `${paddingLeft}px` }}
       >
         {/* Chevron for folders */}
-        {isFolder && hasChildren && (
+        {isFolder && (
           <div className="flex-shrink-0 w-4 flex justify-center">
             <svg 
               className={`w-3 h-3 transition-transform duration-150 ${

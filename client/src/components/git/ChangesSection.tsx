@@ -95,8 +95,8 @@ export default function ChangesSection() {
   const stagedCount = gitStatus?.staged.length || 0;
 
   return (
-    <div>
-      <div className="px-4 py-2 border-b border-gray-200 bg-gray-50">
+    <div className="flex flex-col h-full">
+      <div className="px-4 py-2 border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
         <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
           Changes ({allChanges.length})
         </h3>
@@ -175,7 +175,7 @@ export default function ChangesSection() {
           {/* Staged Changes */}
           {stagedChanges.length > 0 && (
             <>
-              <div className="px-4 py-2 bg-blue-50 border-b border-blue-200">
+              <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 sticky top-0 z-10">
                 <h4 className="text-xs font-medium text-blue-700 uppercase tracking-wider">
                   Staged Changes ({stagedChanges.length})
                 </h4>
@@ -211,7 +211,7 @@ export default function ChangesSection() {
           {unstagedChanges.length > 0 && (
             <>
               {stagedChanges.length > 0 && (
-                <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                   <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Unstaged Changes ({unstagedChanges.length})
                   </h4>

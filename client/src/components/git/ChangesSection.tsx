@@ -68,6 +68,30 @@ export default function ChangesSection() {
     }
   };
 
+  const handleStageAll = async () => {
+    if (unstagedChanges.length === 0) return;
+    
+    try {
+      const filesToStage = unstagedChanges.map(change => change.path);
+      await apiClient.post('/git/stage', { files: filesToStage });
+      await refetch();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to stage all files');
+    }
+  };
+
+  const handleUnstageAll = async () => {
+    if (stagedChanges.length === 0) return;
+    
+    try {
+      const filesToUnstage = stagedChanges.map(change => change.path);
+      await apiClient.post('/git/unstage', { files: filesToUnstage });
+      await refetch();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to unstage all files');
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-4 text-xs text-gray-500 text-center">
@@ -140,7 +164,7 @@ export default function ChangesSection() {
           </button>
           
           {/* Push button - only show when there are commits ahead */}
-          {gitStatus?.ahead && gitStatus.ahead > 0 && (
+          {(gitStatus?.ahead ?? 0) > 0 && (
             <button
               onClick={handlePush}
               disabled={pushing}
@@ -176,9 +200,22 @@ export default function ChangesSection() {
           {stagedChanges.length > 0 && (
             <>
               <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 sticky top-0 z-10">
-                <h4 className="text-xs font-medium text-blue-700 uppercase tracking-wider">
-                  Staged Changes ({stagedChanges.length})
-                </h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-medium text-blue-700 uppercase tracking-wider">
+                    Staged Changes ({stagedChanges.length})
+                  </h4>
+                  {stagedChanges.length > 0 && (
+                    <button
+                      onClick={handleUnstageAll}
+                      className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded transition-colors"
+                      title="Unstage all files"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
               {stagedChanges.map((change, index) => (
                 <div
@@ -210,13 +247,22 @@ export default function ChangesSection() {
           {/* Unstaged Changes */}
           {unstagedChanges.length > 0 && (
             <>
-              {stagedChanges.length > 0 && (
-                <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+              <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                <div className="flex items-center justify-between">
                   <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Unstaged Changes ({unstagedChanges.length})
                   </h4>
+                  <button
+                    onClick={handleStageAll}
+                    className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded transition-colors"
+                    title="Stage all files"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  </button>
                 </div>
-              )}
+              </div>
               {unstagedChanges.map((change, index) => (
                 <div
                   key={`unstaged-${change.path}-${index}`}

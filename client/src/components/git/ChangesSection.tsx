@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useGitStatus } from '../../hooks/useGitStatus';
-import StatusDot from '../common/StatusDot.tsx';
 import apiClient from '../../api/client';
 
 export default function ChangesSection() {

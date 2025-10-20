@@ -18,3 +18,17 @@ export class BranchListDto {
     this.current = current;
   }
 }
+
+export class CreateBranchDto {
+  name: string;
+  from?: string;
+}
+
+export class CheckoutBranchDto {
+  branch: string;
+}
+
+export class DeleteBranchDto {
+  name: string;
+  force?: boolean;
+}

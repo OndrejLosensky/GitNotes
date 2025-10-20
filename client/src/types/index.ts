@@ -39,4 +39,16 @@ export interface CommitInfo {
   date: string;
 }
 
+export interface Branch {
+  name: string;
+  current: boolean;
+  commit: string;
+  label?: string;
+}
+
+export interface BranchList {
+  branches: Branch[];
+  current: string;
+}
+
 export type TabType = 'notes' | 'git';

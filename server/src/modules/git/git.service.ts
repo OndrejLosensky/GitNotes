@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import simpleGit, { SimpleGit } from 'simple-git';
 import * as fs from 'fs';
 import * as path from 'path';
-import { PullResultDto, GitStatusDto, GitHistoryDto } from './dto';
+import { PullResultDto, GitStatusDto, GitHistoryDto, BranchListDto, BranchDto } from './dto';
 import { GitFileStatusEntity } from './entities/git-file-status.entity';
 import { CommitEntity } from './entities/commit.entity';
 import { ERROR_MESSAGES } from '../../core/constants/error-messages.const';
@@ -416,6 +416,132 @@ export class GitService implements OnModuleInit {
 
     // Default to modified
     return 'modified';
+  }
+
+  async getBranches(): Promise<BranchListDto> {
+    try {
+      this.logger.log('Getting branch list...');
+      const result = await this.git.branch();
+      
+      const branches = result.all.map(name => new BranchDto({
+        name,
+        current: name === result.current,
+        commit: result.branches[name]?.commit || 'unknown'
+      }));
+
+      this.logger.log(`Found ${branches.length} branches, current: ${result.current}`);
+      return new BranchListDto(branches, result.current);
+    } catch (error) {
+      this.logger.error('Failed to get branches', error);
+      throw error;
+    }
+  }
+
+  async getCurrentBranch(): Promise<string> {
+    try {
+      this.logger.log('Getting current branch...');
+      const result = await this.git.revparse(['--abbrev-ref', 'HEAD']);
+      const branchName = result.trim();
+      this.logger.log(`Current branch: ${branchName}`);
+      return branchName;
+    } catch (error) {
+      this.logger.error('Failed to get current branch', error);
+      throw error;
+    }
+  }
+
+  async createBranch(name: string, fromBranch?: string): Promise<BranchDto> {
+    try {
+      // Validate branch name
+      this.validateBranchName(name);
+
+      this.logger.log(`Creating branch: ${name}${fromBranch ? ` from ${fromBranch}` : ''}`);
+      
+      if (fromBranch) {
+        // Create branch from specific branch
+        await this.git.checkoutBranch(name, fromBranch);
+      } else {
+        // Create branch from current branch
+        await this.git.checkoutLocalBranch(name);
+      }
+
+      // Get the created branch info
+      const currentBranch = await this.getCurrentBranch();
+      const commit = await this.git.revparse(['HEAD']);
+      
+      this.logger.log(`Successfully created and checked out branch: ${name}`);
+      
+      return new BranchDto({
+        name,
+        current: true,
+        commit: commit.trim()
+      });
+    } catch (error) {
+      this.logger.error(`Failed to create branch: ${name}`, error);
+      throw error;
+    }
+  }
+
+  async checkoutBranch(name: string): Promise<void> {
+    try {
+      this.logger.log(`Checking out branch: ${name}`);
+      await this.git.checkout(name);
+      this.logger.log(`Successfully checked out branch: ${name}`);
+    } catch (error) {
+      this.logger.error(`Failed to checkout branch: ${name}`, error);
+      throw error;
+    }
+  }
+
+  async deleteBranch(name: string, force: boolean = false): Promise<void> {
+    try {
+      // Check if trying to delete current branch
+      const currentBranch = await this.getCurrentBranch();
+      if (name === currentBranch) {
+        throw new Error('Cannot delete the current branch');
+      }
+
+      this.logger.log(`Deleting branch: ${name}${force ? ' (force)' : ''}`);
+      
+      if (force) {
+        await this.git.branch(['-D', name]);
+      } else {
+        await this.git.deleteLocalBranch(name);
+      }
+      
+      this.logger.log(`Successfully deleted branch: ${name}`);
+    } catch (error) {
+      this.logger.error(`Failed to delete branch: ${name}`, error);
+      throw error;
+    }
+  }
+
+  private validateBranchName(name: string): void {
+    const branchNameRegex = /^[a-zA-Z0-9/_-]+$/;
+    
+    if (!name || name.trim().length === 0) {
+      throw new Error('Branch name cannot be empty');
+    }
+    
+    if (!branchNameRegex.test(name)) {
+      throw new Error('Branch name contains invalid characters. Only alphanumeric characters, hyphens, underscores, and forward slashes are allowed');
+    }
+    
+    if (name.includes('..')) {
+      throw new Error('Branch name cannot contain ".."');
+    }
+    
+    if (name.startsWith('-')) {
+      throw new Error('Branch name cannot start with a hyphen');
+    }
+    
+    if (name.endsWith('.lock')) {
+      throw new Error('Branch name cannot end with ".lock"');
+    }
+    
+    if (name.length > 255) {
+      throw new Error('Branch name cannot exceed 255 characters');
+    }
   }
 
   getNotesPath(): string {

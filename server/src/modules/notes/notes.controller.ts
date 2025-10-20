@@ -10,6 +10,7 @@ import {
   HttpStatus,
   Req,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { NotesService } from './notes.service';
@@ -71,18 +72,6 @@ export class NotesController {
     return this.notesService.updateNote(filePath, updateNoteDto);
   }
 
-  @Delete('*')
-  @HttpCode(HttpStatus.OK)
-  deleteNote(@Req() request: Request): { message: string; path: string } {
-    // Extract the path after 'notes/'
-    const fullPath = request.path;
-    const notesPrefix = '/api/notes/';
-    const filePath = fullPath.startsWith(notesPrefix)
-      ? fullPath.substring(notesPrefix.length)
-      : fullPath.split('notes/')[1] || '';
-
-    return this.notesService.deleteNote(filePath);
-  }
 
   @Get('tree')
   @HttpCode(HttpStatus.OK)
@@ -107,5 +96,27 @@ export class NotesController {
     }
     
     return await this.notesService.searchNotes(query.trim(), folder);
+  }
+
+  @Delete('*')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteItem(@Req() request: Request): Promise<void> {
+    // Extract the path after 'notes/'
+    const fullPath = request.path;
+    const notesPrefix = '/api/notes/';
+    const itemPath = fullPath.startsWith(notesPrefix)
+      ? fullPath.substring(notesPrefix.length)
+      : fullPath.split('notes/')[1] || '';
+    
+    if (!itemPath) {
+      throw new BadRequestException('Path is required');
+    }
+
+    // Check if it's a file or folder by checking the extension
+    if (itemPath.endsWith('.md')) {
+      this.notesService.deleteNote(itemPath);
+    } else {
+      this.notesService.deleteFolder(itemPath);
+    }
   }
 }

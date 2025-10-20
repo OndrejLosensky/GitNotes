@@ -2,15 +2,20 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotes } from '../../hooks/useNotes';
 import { useNoteSearch } from '../../hooks/useNoteSearch';
-import { type SearchResult } from '../../types';
+import { type SearchResult, type TreeNode } from '../../types';
 import NoteItem from './NoteItem.tsx';
 import CreateItemModal from './CreateItemModal.tsx';
+import ContextMenu from './ContextMenu.tsx';
 
 export default function NotesTree() {
   const navigate = useNavigate();
-  const { notesTree, loading, error, refetch } = useNotes();
+  const { notesTree, loading, error, refetch, deleteItem } = useNotes();
   const { searchQuery, setSearchQuery, searchResults, loading: searchLoading, error: searchError, clearSearch } = useNoteSearch();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{
+    node: TreeNode;
+    position: { x: number; y: number };
+  } | null>(null);
 
   const handleSearchResultClick = (result: SearchResult) => {
     navigate(`/note/${result.path}`);
@@ -30,6 +35,28 @@ export default function NotesTree() {
         part
       )
     );
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, node: TreeNode) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({
+      node,
+      position: { x: e.clientX, y: e.clientY }
+    });
+  };
+
+  const handleDeleteItem = async (path: string) => {
+    try {
+      await deleteItem(path);
+      setContextMenu(null);
+    } catch (error) {
+      console.error('Failed to delete item:', error);
+    }
+  };
+
+  const closeContextMenu = () => {
+    setContextMenu(null);
   };
 
 
@@ -162,23 +189,39 @@ export default function NotesTree() {
               <p className="text-xs text-gray-400">Create a new note to get started</p>
             </div>
           ) : (
-            <div className="py-2">
-              {notesTree.map((node) => (
-                <NoteItem key={node.path} node={node} level={0} />
-              ))}
-            </div>
+              <div className="py-2">
+                {notesTree.map((node) => (
+                  <NoteItem 
+                    key={node.path} 
+                    node={node} 
+                    level={0} 
+                    onContextMenu={(e) => handleContextMenu(e, node)}
+                  />
+                ))}
+              </div>
           )
         )}
       </div>
 
-      {/* Create Item Modal */}
-      <CreateItemModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSuccess={refetch}
-        notesTree={notesTree}
-      />
-    </div>
-  );
-}
+        {/* Create Item Modal */}
+        <CreateItemModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={refetch}
+          notesTree={notesTree}
+        />
+
+        {/* Context Menu */}
+        {contextMenu && (
+          <ContextMenu
+            node={contextMenu.node}
+            onDelete={handleDeleteItem}
+            isOpen={true}
+            onClose={closeContextMenu}
+            position={contextMenu.position}
+          />
+        )}
+      </div>
+    );
+  }
 

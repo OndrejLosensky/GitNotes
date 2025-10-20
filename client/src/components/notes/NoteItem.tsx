@@ -6,9 +6,10 @@ import StatusDot from '../common/StatusDot.tsx';
 interface NoteItemProps {
   node: TreeNode;
   level: number;
+  onContextMenu?: (e: React.MouseEvent, node: TreeNode) => void;
 }
 
-export default function NoteItem({ node, level }: NoteItemProps) {
+export default function NoteItem({ node, level, onContextMenu }: NoteItemProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -92,6 +93,7 @@ export default function NoteItem({ node, level }: NoteItemProps) {
     <div>
       <div
         onClick={handleClick}
+        onContextMenu={onContextMenu ? (e) => onContextMenu(e, node) : undefined}
         className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer group transition-all duration-150 ${
           isActive 
             ? 'bg-indigo-50 border-r-2 border-indigo-500 text-indigo-700' 
@@ -163,7 +165,7 @@ export default function NoteItem({ node, level }: NoteItemProps) {
       {isFolder && isExpanded && hasChildren && (
         <div>
           {node.children!.map((child) => (
-            <NoteItem key={child.path} node={child} level={level + 1} />
+            <NoteItem key={child.path} node={child} level={level + 1} onContextMenu={onContextMenu} />
           ))}
         </div>
       )}

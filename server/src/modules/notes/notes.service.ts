@@ -304,52 +304,6 @@ export class NotesService {
     return noteEntity;
   }
 
-  deleteNote(filePath: string): { message: string; path: string } {
-    const notesPath = this.gitService.getNotesPath();
-
-    // Validate the path
-    let validatedPath: string;
-    try {
-      validatedPath = FilePathValidator.validatePath(filePath, notesPath);
-    } catch {
-      this.logger.warn(`Invalid path for note deletion: ${filePath}`);
-      throw new BadRequestException(ERROR_MESSAGES.NOTE_INVALID_PATH);
-    }
-
-    // Check if file exists
-    if (!fs.existsSync(validatedPath)) {
-      this.logger.warn(`Note not found for deletion: ${filePath}`);
-      throw new NotFoundException(ERROR_MESSAGES.NOTE_NOT_FOUND);
-    }
-
-    // Check if it's a file
-    const stats = fs.statSync(validatedPath);
-    if (!stats.isFile()) {
-      this.logger.warn(`Path is not a file: ${filePath}`);
-      throw new BadRequestException(ERROR_MESSAGES.NOTE_INVALID_PATH);
-    }
-
-    // Check if it's a markdown file
-    if (!validatedPath.endsWith(APP_CONSTANTS.MARKDOWN_EXTENSION)) {
-      throw new BadRequestException('Only markdown files (.md) are supported');
-    }
-
-    // Delete file
-    try {
-      fs.unlinkSync(validatedPath);
-    } catch (error) {
-      this.logger.error(`Failed to delete note: ${filePath}`, error);
-      throw new InternalServerErrorException(ERROR_MESSAGES.NOTE_DELETE_ERROR);
-    }
-
-    const relativePath = path.relative(notesPath, validatedPath);
-    this.logger.log(`Successfully deleted note: ${relativePath}`);
-
-    return {
-      message: 'Note deleted successfully',
-      path: relativePath,
-    };
-  }
 
   private async readMarkdownFiles(
     dirPath: string,
@@ -642,5 +596,71 @@ export class NotesService {
 
   private isMarkdownFile(fileName: string): boolean {
     return fileName.toLowerCase().endsWith('.md');
+  }
+
+  deleteNote(filePath: string): void {
+    try {
+      const notesPath = this.gitService.getNotesPath();
+      
+      // Validate file path
+      const fullPath = FilePathValidator.validatePath(filePath, notesPath);
+
+      // Check if file exists
+      if (!fs.existsSync(fullPath)) {
+        throw new NotFoundException(`File not found: ${filePath}`);
+      }
+
+      // Check if it's a markdown file
+      if (!this.isMarkdownFile(path.basename(fullPath))) {
+        throw new BadRequestException('Only markdown files can be deleted');
+      }
+
+      // Delete the file
+      fs.unlinkSync(fullPath);
+
+      this.logger.log(`Deleted note: ${filePath}`);
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      this.logger.error('Failed to delete note', error);
+      throw new InternalServerErrorException('Failed to delete note');
+    }
+  }
+
+  deleteFolder(folderPath: string): void {
+    try {
+      const notesPath = this.gitService.getNotesPath();
+      
+      // Validate folder path
+      const fullPath = FilePathValidator.validatePath(folderPath, notesPath);
+
+      // Check if folder exists
+      if (!fs.existsSync(fullPath)) {
+        throw new NotFoundException(`Folder not found: ${folderPath}`);
+      }
+
+      // Check if it's actually a directory
+      if (!fs.statSync(fullPath).isDirectory()) {
+        throw new BadRequestException('Path is not a folder');
+      }
+
+      // Check if folder is empty
+      const files = fs.readdirSync(fullPath);
+      if (files.length > 0) {
+        throw new ConflictException('Cannot delete non-empty folder');
+      }
+
+      // Delete the folder
+      fs.rmdirSync(fullPath);
+
+      this.logger.log(`Deleted folder: ${folderPath}`);
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException || error instanceof ConflictException) {
+        throw error;
+      }
+      this.logger.error('Failed to delete folder', error);
+      throw new InternalServerErrorException('Failed to delete folder');
+    }
   }
 }

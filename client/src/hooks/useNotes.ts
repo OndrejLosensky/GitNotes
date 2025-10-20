@@ -30,12 +30,27 @@ export function useNotes() {
     fetchNotes();
   }, []);
 
+  const deleteItem = async (path: string): Promise<void> => {
+    try {
+      // Encode each path segment separately to preserve the path structure
+      const encodedPath = path.split('/').map(segment => encodeURIComponent(segment)).join('/');
+      await apiClient.delete(`/notes/${encodedPath}`);
+      // Refresh the notes tree after deletion
+      await fetchNotes();
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to delete item';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  };
+
   return {
     notes,
     notesTree,
     loading,
     error,
     refetch: fetchNotes,
+    deleteItem,
   };
 }
 

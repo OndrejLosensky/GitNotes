@@ -41,16 +41,23 @@ export default function RecentCommits({ isCollapsed, onToggle }: RecentCommitsPr
       {/* Collapsible header */}
       <button
         onClick={onToggle}
-        className="px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors border-b border-gray-200 flex items-center justify-between cursor-pointer"
+        className="px-4 py-2 transition-colors border-b flex items-center justify-between cursor-pointer"
+        style={{
+          backgroundColor: 'var(--bg-secondary)',
+          borderColor: 'var(--border-color)',
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)'}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'}
       >
-        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+        <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
           History
         </h3>
         <svg
-          className={`w-4 h-4 text-gray-500 transition-transform ${isCollapsed ? '' : 'rotate-180'}`}
+          className={`w-4 h-4 transition-transform ${isCollapsed ? '' : 'rotate-180'}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          style={{ color: 'var(--text-tertiary)' }}
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
@@ -60,11 +67,11 @@ export default function RecentCommits({ isCollapsed, onToggle }: RecentCommitsPr
       {!isCollapsed && (
         <div className="max-h-[300px] overflow-y-auto">
           {loading ? (
-            <div className="p-4 text-xs text-gray-500 text-center">
+            <div className="p-4 text-xs text-center" style={{ color: 'var(--text-tertiary)' }}>
               Loading commits...
             </div>
           ) : commits.length === 0 ? (
-            <div className="p-4 text-xs text-gray-500 text-center">
+            <div className="p-4 text-xs text-center" style={{ color: 'var(--text-tertiary)' }}>
               No commits found
             </div>
           ) : (
@@ -72,15 +79,21 @@ export default function RecentCommits({ isCollapsed, onToggle }: RecentCommitsPr
               {commits.map((commit) => (
                 <div key={commit.hash} className="text-xs py-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <code className="text-[10px] bg-gray-100 px-1 rounded font-mono text-gray-600">
+                    <code 
+                      className="text-[10px] px-1 rounded font-mono"
+                      style={{
+                        backgroundColor: 'var(--bg-tertiary)',
+                        color: 'var(--text-secondary)',
+                      }}
+                    >
                       {commit.hash.substring(0, 7)}
                     </code>
-                    <span className="text-gray-500 text-[10px]">
+                    <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
                       {formatDate(commit.date)}
                     </span>
                   </div>
-                  <p className="text-gray-700 truncate text-sm font-medium">{commit.message}</p>
-                  <p className="text-gray-400 text-[10px]">{commit.author}</p>
+                  <p className="truncate text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{commit.message}</p>
+                  <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{commit.author}</p>
                 </div>
               ))}
             </div>

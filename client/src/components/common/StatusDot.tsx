@@ -12,18 +12,27 @@ export default function StatusDot({ status, size = 'sm' }: StatusDotProps) {
     lg: 'w-4 h-4',
   };
 
-  const colorClasses = {
-    modified: 'bg-yellow-400',  // Yellow for modified files
-    untracked: 'bg-gray-400',   // Gray for untracked files
-    added: 'bg-green-400',      // Green for new added files
-    staged: 'bg-gray-400',      // Gray for staged files
-    deleted: 'bg-red-400',
-    unmodified: 'bg-gray-400',  // Gray for unchanged files
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'modified':
+        return 'var(--git-modified)';
+      case 'untracked':
+      case 'staged':
+      case 'unmodified':
+        return 'var(--text-tertiary)';
+      case 'added':
+        return 'var(--git-added)';
+      case 'deleted':
+        return 'var(--git-deleted)';
+      default:
+        return 'var(--text-tertiary)';
+    }
   };
 
   return (
     <div
-      className={`rounded-full ${sizeClasses[size]} ${colorClasses[status]}`}
+      className={`rounded-full ${sizeClasses[size]}`}
+      style={{ backgroundColor: getStatusColor(status) }}
       title={status}
     />
   );

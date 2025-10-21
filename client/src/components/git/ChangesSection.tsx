@@ -94,7 +94,7 @@ export default function ChangesSection() {
 
   if (loading) {
     return (
-      <div className="p-4 text-xs text-gray-500 text-center">
+      <div className="p-4 text-xs text-center" style={{ color: 'var(--text-tertiary)' }}>
         Loading changes...
       </div>
     );
@@ -120,8 +120,14 @@ export default function ChangesSection() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 py-2 border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
-        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+      <div 
+        className="px-4 py-2 border-b sticky top-0 z-10"
+        style={{
+          borderColor: 'var(--border-color)',
+          backgroundColor: 'var(--bg-secondary)',
+        }}
+      >
+        <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
           Changes ({allChanges.length})
         </h3>
       </div>
@@ -130,21 +136,48 @@ export default function ChangesSection() {
       <div className="px-4 py-3">
         <div className="space-y-2">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
               Commit Message
             </label>
             <textarea
               value={commitMessage}
               onChange={(e) => setCommitMessage(e.target.value)}
               placeholder="Enter commit message..."
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+              className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 resize-none"
+              style={{
+                borderColor: 'var(--border-color)',
+                backgroundColor: 'var(--bg-primary)',
+                color: 'var(--text-primary)',
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'var(--color-primary)';
+                e.target.style.boxShadow = `0 0 0 2px var(--color-primary)`;
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'var(--border-color)';
+                e.target.style.boxShadow = 'none';
+              }}
               rows={2}
             />
           </div>
           <button
             onClick={handleCommit}
             disabled={committing || stagedCount === 0}
-            className="w-full px-3 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2"
+            className="w-full px-3 py-2 text-sm rounded-md transition-colors flex items-center justify-center gap-2"
+            style={{
+              backgroundColor: committing || stagedCount === 0 ? 'var(--text-tertiary)' : 'var(--color-primary)',
+              color: 'white',
+            }}
+            onMouseEnter={(e) => {
+              if (!committing && stagedCount > 0) {
+                e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!committing && stagedCount > 0) {
+                e.currentTarget.style.backgroundColor = 'var(--color-primary)';
+              }
+            }}
           >
             {committing ? (
               <>
@@ -168,7 +201,21 @@ export default function ChangesSection() {
             <button
               onClick={handlePush}
               disabled={pushing}
-              className="w-full px-3 py-2 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2"
+              className="w-full px-3 py-2 text-sm rounded-md transition-colors flex items-center justify-center gap-2"
+              style={{
+                backgroundColor: pushing ? 'var(--text-tertiary)' : 'var(--text-secondary)',
+                color: 'white',
+              }}
+              onMouseEnter={(e) => {
+                if (!pushing) {
+                  e.currentTarget.style.backgroundColor = 'var(--text-primary)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!pushing) {
+                  e.currentTarget.style.backgroundColor = 'var(--text-secondary)';
+                }
+              }}
             >
               {pushing ? (
                 <>
@@ -192,22 +239,35 @@ export default function ChangesSection() {
 
       {allChanges.length === 0 ? (
         <div className="px-4 py-6 text-center">
-          <p className="text-sm text-gray-500">No changes</p>
+          <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>No changes</p>
         </div>
       ) : (
         <div>
           {/* Staged Changes */}
           {stagedChanges.length > 0 && (
             <>
-              <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 sticky top-0 z-10">
+              <div 
+                className="px-4 py-2 border-b sticky top-0 z-10"
+                style={{
+                  backgroundColor: 'var(--sidebar-active)',
+                  borderColor: 'var(--color-primary)',
+                }}
+              >
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-medium text-blue-700 uppercase tracking-wider">
+                  <h4 className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-primary)' }}>
                     Staged Changes ({stagedChanges.length})
                   </h4>
                   {stagedChanges.length > 0 && (
                     <button
                       onClick={handleUnstageAll}
-                      className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded transition-colors"
+                      className="p-1 rounded transition-colors"
+                      style={{ color: 'var(--color-primary)' }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
                       title="Unstage all files"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,22 +280,34 @@ export default function ChangesSection() {
               {stagedChanges.map((change, index) => (
                 <div
                   key={`staged-${change.path}-${index}`}
-                  className="px-4 py-2 hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100"
+                  className="px-4 py-2 flex items-center gap-2 border-b"
+                  style={{ borderColor: 'var(--border-light)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  <span className="flex-1 text-sm text-gray-700 truncate">
+                  <span className="flex-1 text-sm truncate" style={{ color: 'var(--text-primary)' }}>
                     {change.path}
                   </span>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleUnstageFile(change.path)}
-                      className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded"
+                      className="p-1 rounded"
+                      style={{ color: 'var(--text-tertiary)' }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = 'var(--text-primary)';
+                        e.currentTarget.style.backgroundColor = 'var(--sidebar-active)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = 'var(--text-tertiary)';
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
                       title="Unstage file"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                       </svg>
                     </button>
-                    <span className="text-xs font-medium uppercase text-blue-600">
+                    <span className="text-xs font-medium uppercase" style={{ color: 'var(--color-primary)' }}>
                       S
                     </span>
                   </div>
@@ -247,14 +319,29 @@ export default function ChangesSection() {
           {/* Unstaged Changes */}
           {unstagedChanges.length > 0 && (
             <>
-              <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+              <div 
+                className="px-4 py-2 border-b sticky top-0 z-10"
+                style={{
+                  backgroundColor: 'var(--bg-secondary)',
+                  borderColor: 'var(--border-color)',
+                }}
+              >
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <h4 className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
                     Unstaged Changes ({unstagedChanges.length})
                   </h4>
                   <button
                     onClick={handleStageAll}
-                    className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded transition-colors"
+                    className="p-1 rounded transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'var(--text-primary)';
+                      e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = 'var(--text-secondary)';
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
                     title="Stage all files"
                   >
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -266,27 +353,42 @@ export default function ChangesSection() {
               {unstagedChanges.map((change, index) => (
                 <div
                   key={`unstaged-${change.path}-${index}`}
-                  className="px-4 py-2 hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100 last:border-b-0"
+                  className="px-4 py-2 flex items-center gap-2 border-b last:border-b-0"
+                  style={{ borderColor: 'var(--border-light)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  <span className="flex-1 text-sm text-gray-700 truncate">
+                  <span className="flex-1 text-sm truncate" style={{ color: 'var(--text-primary)' }}>
                     {change.path}
                   </span>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleStageFile(change.path)}
-                      className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded"
+                      className="p-1 rounded"
+                      style={{ color: 'var(--text-tertiary)' }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = 'var(--text-primary)';
+                        e.currentTarget.style.backgroundColor = 'var(--sidebar-active)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = 'var(--text-tertiary)';
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
                       title="Stage file"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                       </svg>
                     </button>
-                    <span className={`text-xs font-medium uppercase ${
-                      change.type === 'modified' ? 'text-yellow-600' :
-                      change.type === 'untracked' ? 'text-gray-600' :
-                      change.type === 'deleted' ? 'text-red-600' :
-                      'text-gray-400'
-                    }`}>
+                    <span 
+                      className="text-xs font-medium uppercase"
+                      style={{
+                        color: change.type === 'modified' ? 'var(--git-modified)' :
+                               change.type === 'untracked' ? 'var(--text-secondary)' :
+                               change.type === 'deleted' ? 'var(--git-deleted)' :
+                               'var(--text-tertiary)'
+                      }}
+                    >
                       {change.type.charAt(0)}
                     </span>
                   </div>

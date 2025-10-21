@@ -1,11 +1,13 @@
 /* Sidebar Styles */
 
 .sidebar-header {
-  @apply border-b border-gray-200 p-4;
+  @apply border-b p-4;
+  border-color: var(--border-color);
 }
 
 .sidebar-tabs {
-  @apply flex border-b border-gray-200;
+  @apply flex border-b;
+  border-color: var(--border-color);
 }
 
 .sidebar-tab {
@@ -13,11 +15,17 @@
 }
 
 .sidebar-tab.active {
-  @apply text-indigo-600 border-b-2 border-indigo-600;
+  @apply border-b-2;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .sidebar-tab:not(.active) {
-  @apply text-gray-600 hover:text-gray-800;
+  color: var(--text-secondary);
+}
+
+.sidebar-tab:not(.active):hover {
+  color: var(--text-primary);
 }
 
 .sidebar-content {

@@ -6,28 +6,35 @@
 }
 
 .history-commit-list {
-  @apply w-80 border-r border-gray-200 flex flex-col bg-white;
+  @apply w-80 border-r flex flex-col;
+  border-color: var(--border-color);
+  background-color: var(--bg-primary);
 }
 
 .history-commit-detail {
-  @apply flex-1 bg-white overflow-hidden;
+  @apply flex-1 overflow-hidden;
+  background-color: var(--bg-primary);
 }
 
 /* Diff view utilities */
 .diff-line-add {
-  @apply bg-green-50 text-green-800;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--git-added);
 }
 
 .diff-line-remove {
-  @apply bg-red-50 text-red-800;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--git-deleted);
 }
 
 .diff-line-context {
-  @apply bg-white text-gray-700;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .diff-line-number {
-  @apply inline-block w-12 px-2 text-right text-gray-500 select-none;
+  @apply inline-block w-12 px-2 text-right select-none;
+  color: var(--text-tertiary);
 }
 
 /* Ensure code blocks don't wrap */

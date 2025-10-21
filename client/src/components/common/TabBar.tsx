@@ -35,17 +35,36 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
   };
 
   return (
-    <div className="border-b border-gray-200 bg-gray-50">
+    <div 
+      className="border-b"
+      style={{
+        borderColor: 'var(--border-color)',
+        backgroundColor: 'var(--bg-secondary)',
+      }}
+    >
       <div className="flex">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`flex-1 px-4 py-3 transition-colors border-b-2 flex items-center justify-center ${
-              activeTab === tab.id
-                ? 'text-indigo-600 border-indigo-600 bg-white'
-                : 'text-gray-600 hover:text-gray-800 border-transparent hover:border-gray-300'
-            }`}
+            className="flex-1 px-4 py-3 transition-colors border-b-2 flex items-center justify-center"
+            style={{
+              color: activeTab === tab.id ? 'var(--color-primary)' : 'var(--text-secondary)',
+              borderColor: activeTab === tab.id ? 'var(--color-primary)' : 'transparent',
+              backgroundColor: activeTab === tab.id ? 'var(--bg-primary)' : 'transparent',
+            }}
+            onMouseEnter={(e) => {
+              if (activeTab !== tab.id) {
+                e.currentTarget.style.color = 'var(--text-primary)';
+                e.currentTarget.style.borderColor = 'var(--border-light)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeTab !== tab.id) {
+                e.currentTarget.style.color = 'var(--text-secondary)';
+                e.currentTarget.style.borderColor = 'transparent';
+              }
+            }}
             title={tab.tooltip}
           >
             {tab.icon}
@@ -55,7 +74,16 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
         {/* History button */}
         <button
           onClick={handleHistoryClick}
-          className="flex-1 px-4 py-3 text-gray-600 hover:text-gray-800 border-b-2 border-transparent hover:border-gray-300 transition-colors flex items-center justify-center"
+          className="flex-1 px-4 py-3 border-b-2 border-transparent transition-colors flex items-center justify-center"
+          style={{ color: 'var(--text-secondary)' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = 'var(--text-primary)';
+            e.currentTarget.style.borderColor = 'var(--border-light)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'var(--text-secondary)';
+            e.currentTarget.style.borderColor = 'transparent';
+          }}
           title="History"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

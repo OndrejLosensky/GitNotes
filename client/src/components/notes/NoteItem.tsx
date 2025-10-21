@@ -25,62 +25,62 @@ export default function NoteItem({ node, level, onContextMenu }: NoteItemProps) 
     }
   };
 
-  const getIconColor = () => {
+  const getIconColorStyle = () => {
     switch (node.gitStatus) {
       case 'modified':
-        return 'text-yellow-500';
+        return { color: 'var(--git-modified)' };
       case 'added':
-        return 'text-green-500';
+        return { color: 'var(--git-added)' };
       case 'untracked':
-        return 'text-gray-500';
+        return { color: 'var(--text-tertiary)' };
       case 'staged':
-        return 'text-gray-500';
+        return { color: 'var(--text-tertiary)' };
       case 'deleted':
-        return 'text-red-500';
+        return { color: 'var(--git-deleted)' };
       case 'unmodified':
       default:
-        return 'text-gray-500';
+        return { color: 'var(--text-tertiary)' };
     }
   };
 
-  const getBackgroundColor = () => {
+  const getBackgroundColorStyle = () => {
     switch (node.gitStatus) {
       case 'modified':
-        return 'bg-yellow-50';
+        return { backgroundColor: 'rgba(245, 158, 11, 0.1)' };
       case 'added':
-        return 'bg-green-50';
+        return { backgroundColor: 'rgba(16, 185, 129, 0.1)' };
       case 'untracked':
-        return 'bg-gray-50';
+        return { backgroundColor: 'var(--sidebar-hover)' };
       case 'staged':
-        return 'bg-gray-50';
+        return { backgroundColor: 'var(--sidebar-hover)' };
       case 'deleted':
-        return 'bg-red-50';
+        return { backgroundColor: 'rgba(239, 68, 68, 0.1)' };
       case 'unmodified':
       default:
-        return '';
+        return {};
     }
   };
 
   const getFileIcon = (fileName: string) => {
     const extension = fileName.split('.').pop()?.toLowerCase();
-    const iconColor = getIconColor();
+    const iconStyle = getIconColorStyle();
     
     switch (extension) {
       case 'md':
         return (
-          <svg className={`w-4 h-4 ${iconColor} flex-shrink-0`} fill="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 flex-shrink-0" style={iconStyle} fill="currentColor" viewBox="0 0 24 24">
             <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
           </svg>
         );
       case 'txt':
         return (
-          <svg className={`w-4 h-4 ${iconColor} flex-shrink-0`} fill="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 flex-shrink-0" style={iconStyle} fill="currentColor" viewBox="0 0 24 24">
             <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
           </svg>
         );
       default:
         return (
-          <svg className={`w-4 h-4 ${iconColor} flex-shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 flex-shrink-0" style={iconStyle} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         );
@@ -89,17 +89,39 @@ export default function NoteItem({ node, level, onContextMenu }: NoteItemProps) 
 
   const paddingLeft = 8 + level * 20;
 
+  const baseStyle = {
+    paddingLeft: `${paddingLeft}px`,
+    ...(isActive 
+      ? {
+          backgroundColor: 'var(--sidebar-active)',
+          borderRight: '2px solid var(--color-primary)',
+          color: 'var(--color-primary)',
+        }
+      : {
+          color: 'var(--text-primary)',
+          ...getBackgroundColorStyle(),
+        }
+    ),
+  };
+
   return (
     <div>
       <div
         onClick={handleClick}
         onContextMenu={onContextMenu ? (e) => onContextMenu(e, node) : undefined}
-        className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer group transition-all duration-150 ${
-          isActive 
-            ? 'bg-indigo-50 border-r-2 border-indigo-500 text-indigo-700' 
-            : `hover:bg-gray-50 text-gray-700 ${getBackgroundColor()}`
-        }`}
-        style={{ paddingLeft: `${paddingLeft}px` }}
+        className="flex items-center gap-2 px-3 py-1.5 cursor-pointer group transition-all duration-150"
+        style={baseStyle}
+        onMouseEnter={(e) => {
+          if (!isActive) {
+            e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isActive) {
+            const bgStyle = getBackgroundColorStyle();
+            e.currentTarget.style.backgroundColor = bgStyle.backgroundColor || 'transparent';
+          }
+        }}
       >
         {/* Chevron for folders */}
         {isFolder && (
@@ -107,10 +129,11 @@ export default function NoteItem({ node, level, onContextMenu }: NoteItemProps) 
             <svg 
               className={`w-3 h-3 transition-transform duration-150 ${
                 isExpanded ? 'rotate-90' : ''
-              } text-gray-400`}
+              }`}
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
+              style={{ color: 'var(--text-tertiary)' }}
             >
               <path 
                 strokeLinecap="round" 
@@ -131,7 +154,8 @@ export default function NoteItem({ node, level, onContextMenu }: NoteItemProps) 
         <div className="flex-shrink-0">
           {isFolder ? (
             <svg 
-              className={`w-4 h-4 transition-colors duration-150 ${getIconColor()}`}
+              className="w-4 h-4 transition-colors duration-150"
+              style={getIconColorStyle()}
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -149,9 +173,10 @@ export default function NoteItem({ node, level, onContextMenu }: NoteItemProps) 
         </div>
 
         {/* File/Folder name */}
-        <span className={`flex-1 text-sm truncate transition-colors duration-150 ${
-          isActive ? 'font-medium' : 'font-normal'
-        }`}>
+        <span 
+          className="flex-1 text-sm truncate transition-colors duration-150"
+          style={{ fontWeight: isActive ? 500 : 400 }}
+        >
           {node.name}
         </span>
 

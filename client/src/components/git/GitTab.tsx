@@ -7,8 +7,14 @@ export default function GitTab() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-        <h2 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+      <div 
+        className="px-4 py-3 border-b"
+        style={{
+          borderColor: 'var(--border-color)',
+          backgroundColor: 'var(--bg-secondary)',
+        }}
+      >
+        <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
           Source Control
         </h2>
       </div>
@@ -19,7 +25,7 @@ export default function GitTab() {
       </div>
 
       {/* History section */}
-      <div className="border-t border-gray-200">
+      <div className="border-t" style={{ borderColor: 'var(--border-color)' }}>
         <RecentCommits 
           isCollapsed={isHistoryCollapsed}
           onToggle={() => setIsHistoryCollapsed(!isHistoryCollapsed)}

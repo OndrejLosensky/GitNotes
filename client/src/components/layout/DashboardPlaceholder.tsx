@@ -1,13 +1,17 @@
 export default function DashboardPlaceholder() {
   return (
-    <div className="flex items-center justify-center h-full bg-gray-50">
+    <div 
+      className="flex items-center justify-center h-full"
+      style={{ backgroundColor: 'var(--bg-secondary)' }}
+    >
       <div className="text-center max-w-md px-6">
         <div className="mb-6">
           <svg
-            className="mx-auto h-24 w-24 text-gray-300"
+            className="mx-auto h-24 w-24"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            style={{ color: 'var(--text-tertiary)' }}
           >
             <path
               strokeLinecap="round"
@@ -17,13 +21,22 @@ export default function DashboardPlaceholder() {
             />
           </svg>
         </div>
-        <h2 className="text-2xl font-semibold text-gray-700 mb-2">
+        <h2 
+          className="text-2xl font-semibold mb-2"
+          style={{ color: 'var(--text-primary)' }}
+        >
           Welcome to GitNotes
         </h2>
-        <p className="text-gray-500 mb-6">
+        <p 
+          className="mb-6"
+          style={{ color: 'var(--text-secondary)' }}
+        >
           Select a note from the sidebar to get started, or create a new one to begin taking notes.
         </p>
-        <div className="space-y-2 text-sm text-gray-400">
+        <div 
+          className="space-y-2 text-sm"
+          style={{ color: 'var(--text-tertiary)' }}
+        >
           <p>💡 Use the sidebar to browse your notes</p>
           <p>🔄 Track changes with Git integration</p>
           <p>✏️ Create and edit markdown files</p>

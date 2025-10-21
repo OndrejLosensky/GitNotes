@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useGitStatus } from '../../hooks/useGitStatus';
+import { useAppContext } from '../../contexts/AppContext';
 import apiClient from '../../api/client';
 
 export default function ChangesSection() {
   const { gitStatus, loading, refetch } = useGitStatus();
+  const { triggerRefresh } = useAppContext();
   const [commitMessage, setCommitMessage] = useState('');
   const [committing, setCommitting] = useState(false);
   const [pushing, setPushing] = useState(false);
@@ -25,6 +27,8 @@ export default function ChangesSection() {
       alert(`Committed: ${response.data.hash.substring(0, 7)}`);
       setCommitMessage('');
       await refetch();
+      // Trigger refresh for commits after successful commit
+      triggerRefresh('commits');
     } catch (error: any) {
       alert(error.response?.data?.message || 'Failed to commit');
     } finally {
@@ -38,6 +42,8 @@ export default function ChangesSection() {
       const response = await apiClient.post('/git/push');
       alert(`Push successful: ${response.data.message}`);
       await refetch();
+      // Trigger refresh for commits after successful push
+      triggerRefresh('commits');
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Failed to push to GitHub';
       if (error.response?.status === 409) {

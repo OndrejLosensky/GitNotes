@@ -3,7 +3,7 @@ import LoginPage from './pages/auth/index.tsx';
 import NotesPage from './pages/dashboard/index.tsx';
 import NotePage from './pages/dashboard/note/index.tsx';
 import SettingsPage from './pages/settings/index.tsx';
-import HistoryPage from './pages/history/index.tsx';
+import HistoryPage, { HistoryToolbarWrapper } from './pages/history/index.tsx';
 import MainLayout from './components/layout/MainLayout.tsx';
 import { isAuthenticated } from './utils/auth';
 
@@ -50,7 +50,7 @@ function App() {
           path="/history"
           element={
             <ProtectedRoute>
-              <MainLayout>
+              <MainLayout topToolbar={<HistoryToolbarWrapper />}>
                 <HistoryPage />
               </MainLayout>
             </ProtectedRoute>

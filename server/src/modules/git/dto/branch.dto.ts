@@ -1,3 +1,5 @@
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+
 export class BranchDto {
   name: string;
   current: boolean;
@@ -20,11 +22,18 @@ export class BranchListDto {
 }
 
 export class CreateBranchDto {
+  @IsString()
+  @IsNotEmpty({ message: 'Branch name is required' })
   name: string;
+
+  @IsOptional()
+  @IsString()
   from?: string;
 }
 
 export class CheckoutBranchDto {
+  @IsString()
+  @IsNotEmpty({ message: 'Branch name is required' })
   branch: string;
 }
 

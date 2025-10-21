@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../../api/client';
+import { useAppContext } from '../../contexts/AppContext';
 import { type CommitInfo } from '../../types';
 
 interface RecentCommitsProps {
@@ -10,21 +11,26 @@ interface RecentCommitsProps {
 export default function RecentCommits({ isCollapsed, onToggle }: RecentCommitsProps) {
   const [commits, setCommits] = useState<CommitInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const { registerRefreshCallback } = useAppContext();
+
+  const fetchCommits = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get('/git/history?limit=10');
+      setCommits(response.data.commits || []);
+    } catch (error) {
+      console.error('Failed to fetch commits:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchCommits = async () => {
-      try {
-        const response = await apiClient.get('/git/history?limit=10');
-        setCommits(response.data.commits || []);
-      } catch (error) {
-        console.error('Failed to fetch commits:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCommits();
-  }, []); 
+    
+    // Register refresh callback for commits
+    registerRefreshCallback('commits', fetchCommits);
+  }, [registerRefreshCallback]); 
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

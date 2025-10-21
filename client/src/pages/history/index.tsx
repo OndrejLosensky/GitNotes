@@ -3,7 +3,9 @@ import apiClient from '../../api/client';
 import { type CommitInfo } from '../../types';
 import CommitList from '../../components/git/CommitList';
 import CommitDetail from '../../components/git/CommitDetail';
+import HistoryToolbar from '../../components/git/HistoryToolbar';
 import { useCommitDetails } from '../../hooks/useCommitDetails';
+import { useAppContext } from '../../contexts/AppContext';
 
 export default function HistoryPage() {
   const [commits, setCommits] = useState<CommitInfo[]>([]);
@@ -11,21 +13,26 @@ export default function HistoryPage() {
   const [selectedHash, setSelectedHash] = useState<string | null>(null);
   
   const { commitDetails, loading: detailsLoading, error: detailsError } = useCommitDetails(selectedHash);
+  const { registerRefreshCallback, triggerRefresh } = useAppContext();
+
+  const fetchCommits = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get('/git/history?limit=50');
+      setCommits(response.data.commits || []);
+    } catch (error) {
+      console.error('Failed to fetch commits:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchCommits = async () => {
-      try {
-        const response = await apiClient.get('/git/history?limit=50');
-        setCommits(response.data.commits || []);
-      } catch (error) {
-        console.error('Failed to fetch commits:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCommits();
-  }, []);
+    
+    // Register this component's refresh callback
+    registerRefreshCallback('commits', fetchCommits);
+  }, [registerRefreshCallback]);
 
   return (
     <div className="h-full flex">
@@ -72,5 +79,26 @@ export default function HistoryPage() {
         />
       </div>
     </div>
+  );
+}
+
+// Export the toolbar component separately so App.tsx can use it
+export function HistoryToolbarWrapper() {
+  const { triggerRefresh } = useAppContext();
+
+  const handleRefreshCommits = () => {
+    // This will be handled by the HistoryPage component
+    triggerRefresh('commits');
+  };
+
+  const handleRefreshNotes = () => {
+    triggerRefresh('notes');
+  };
+
+  return (
+    <HistoryToolbar 
+      onRefreshCommits={handleRefreshCommits}
+      onRefreshNotes={handleRefreshNotes}
+    />
   );
 }

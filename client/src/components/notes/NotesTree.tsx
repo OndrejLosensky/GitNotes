@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotes } from '../../hooks/useNotes';
 import { useNoteSearch } from '../../hooks/useNoteSearch';
+import { useAppContext } from '../../contexts/AppContext';
 import { type SearchResult, type TreeNode } from '../../types';
 import NoteItem from './NoteItem.tsx';
 import CreateItemModal from './CreateItemModal.tsx';
@@ -11,11 +12,17 @@ export default function NotesTree() {
   const navigate = useNavigate();
   const { notesTree, loading, error, refetch, deleteItem } = useNotes();
   const { searchQuery, setSearchQuery, searchResults, loading: searchLoading, error: searchError, clearSearch } = useNoteSearch();
+  const { registerRefreshCallback } = useAppContext();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [contextMenu, setContextMenu] = useState<{
     node: TreeNode;
     position: { x: number; y: number };
   } | null>(null);
+
+  // Register refresh callback for notes
+  useEffect(() => {
+    registerRefreshCallback('notes', refetch);
+  }, [registerRefreshCallback, refetch]);
 
   const handleSearchResultClick = (result: SearchResult) => {
     navigate(`/note/${result.path}`);

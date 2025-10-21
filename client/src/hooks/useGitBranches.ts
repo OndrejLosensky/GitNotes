@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { type Branch, type BranchList } from '../types';
 import apiClient from '../api/client';
+import { useAppContext } from '../contexts/AppContext';
 
 export function useGitBranches(autoRefresh: boolean = true, refreshInterval: number = 10000) {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [currentBranch, setCurrentBranch] = useState<string>('main');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { triggerRefresh } = useAppContext();
 
   const fetchBranches = useCallback(async () => {
     try {
@@ -64,6 +66,9 @@ export function useGitBranches(autoRefresh: boolean = true, refreshInterval: num
       // Refresh branches to get updated current status
       await fetchBranches();
       
+      // Trigger refresh for both notes and commits after branch switch
+      triggerRefresh('all');
+      
       return true;
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to checkout branch';
@@ -73,7 +78,7 @@ export function useGitBranches(autoRefresh: boolean = true, refreshInterval: num
     } finally {
       setLoading(false);
     }
-  }, [fetchBranches]);
+  }, [fetchBranches, triggerRefresh]);
 
   const deleteBranch = useCallback(async (name: string, force: boolean = false): Promise<boolean> => {
     try {

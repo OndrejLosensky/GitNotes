@@ -8,9 +8,12 @@ interface MainLayoutProps {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div 
+      className="flex h-screen overflow-hidden"
+      style={{ backgroundColor: 'var(--bg-primary)' }}
+    >
       <Sidebar />
-      <div className="flex-1 overflow-auto pb-[32px]">
+      <div className="flex-1 overflow-auto pb-[32px]" style={{ backgroundColor: 'var(--bg-primary)' }}>
         {children}
       </div>
       <BottomToolbar />

@@ -120,10 +120,16 @@ export default function CreateItemModal({ isOpen, onClose, onSuccess, notesTree 
         zIndex: 9999
       }}
     >
-      <div className="bg-white rounded-lg shadow-xl w-96 max-w-[90vw]">
+      <div 
+        className="rounded-lg shadow-xl w-96 max-w-[90vw]"
+        style={{ backgroundColor: 'var(--bg-primary)' }}
+      >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
+        <div 
+          className="px-6 py-4 border-b"
+          style={{ borderColor: 'var(--border-color)' }}
+        >
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
             Create New {itemType === 'note' ? 'Note' : 'Folder'}
           </h2>
         </div>
@@ -132,17 +138,28 @@ export default function CreateItemModal({ isOpen, onClose, onSuccess, notesTree 
         <div className="px-6 py-4 space-y-4">
           {/* Type Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
               Type
             </label>
             <div className="flex gap-2">
               <button
                 onClick={() => setItemType('note')}
-                className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${
-                  itemType === 'note'
-                    ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
+                className="flex-1 px-3 py-2 text-sm rounded-md border transition-colors"
+                style={{
+                  backgroundColor: itemType === 'note' ? 'var(--sidebar-active)' : 'var(--bg-secondary)',
+                  borderColor: itemType === 'note' ? 'var(--color-primary)' : 'var(--border-color)',
+                  color: itemType === 'note' ? 'var(--color-primary)' : 'var(--text-secondary)',
+                }}
+                onMouseEnter={(e) => {
+                  if (itemType !== 'note') {
+                    e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (itemType !== 'note') {
+                    e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                  }
+                }}
               >
                 <div className="flex items-center justify-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,11 +170,22 @@ export default function CreateItemModal({ isOpen, onClose, onSuccess, notesTree 
               </button>
               <button
                 onClick={() => setItemType('folder')}
-                className={`flex-1 px-3 py-2 text-sm rounded-md border transition-colors ${
-                  itemType === 'folder'
-                    ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
+                className="flex-1 px-3 py-2 text-sm rounded-md border transition-colors"
+                style={{
+                  backgroundColor: itemType === 'folder' ? 'var(--sidebar-active)' : 'var(--bg-secondary)',
+                  borderColor: itemType === 'folder' ? 'var(--color-primary)' : 'var(--border-color)',
+                  color: itemType === 'folder' ? 'var(--color-primary)' : 'var(--text-secondary)',
+                }}
+                onMouseEnter={(e) => {
+                  if (itemType !== 'folder') {
+                    e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (itemType !== 'folder') {
+                    e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                  }
+                }}
               >
                 <div className="flex items-center justify-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,13 +199,18 @@ export default function CreateItemModal({ isOpen, onClose, onSuccess, notesTree 
 
           {/* Path Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
               Location
             </label>
             <select
               value={selectedPath}
               onChange={(e) => setSelectedPath(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2"
+              style={{
+                backgroundColor: 'var(--bg-secondary)',
+                borderColor: 'var(--border-color)',
+                color: 'var(--text-primary)',
+              }}
             >
               {pathOptions.map((option) => (
                 <option key={option.path} value={option.path}>
@@ -189,7 +222,7 @@ export default function CreateItemModal({ isOpen, onClose, onSuccess, notesTree 
 
           {/* Name Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
               Name
             </label>
             <input
@@ -197,7 +230,12 @@ export default function CreateItemModal({ isOpen, onClose, onSuccess, notesTree 
               value={itemName}
               onChange={(e) => setItemName(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2"
+              style={{
+                backgroundColor: 'var(--bg-secondary)',
+                borderColor: 'var(--border-color)',
+                color: 'var(--text-primary)',
+              }}
               placeholder={itemType === 'note' ? 'my-note.md' : 'my-folder'}
               autoFocus
             />
@@ -205,17 +243,43 @@ export default function CreateItemModal({ isOpen, onClose, onSuccess, notesTree 
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+        <div 
+          className="px-6 py-4 border-t flex justify-end gap-3"
+          style={{ borderColor: 'var(--border-color)' }}
+        >
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 transition-colors"
+            className="px-4 py-2 text-sm transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'var(--text-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }}
           >
             Cancel
           </button>
           <button
             onClick={handleCreate}
             disabled={creating || !itemName.trim()}
-            className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors flex items-center gap-2"
+            className="px-4 py-2 text-sm rounded-md transition-colors flex items-center gap-2"
+            style={{
+              backgroundColor: creating || !itemName.trim() ? 'var(--text-tertiary)' : 'var(--color-primary)',
+              color: 'white',
+            }}
+            onMouseEnter={(e) => {
+              if (!creating && itemName.trim()) {
+                e.currentTarget.style.backgroundColor = 'var(--color-primary)';
+                e.currentTarget.style.opacity = '0.9';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!creating && itemName.trim()) {
+                e.currentTarget.style.backgroundColor = 'var(--color-primary)';
+                e.currentTarget.style.opacity = '1';
+              }
+            }}
           >
             {creating ? (
               <>

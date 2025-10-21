@@ -104,10 +104,16 @@ export default function BranchModal({
         zIndex: 9999
       }}
     >
-      <div className="bg-white rounded-lg shadow-xl w-96 max-w-[90vw]">
+      <div 
+        className="rounded-lg shadow-xl w-96 max-w-[90vw]"
+        style={{ backgroundColor: 'var(--bg-primary)' }}
+      >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
+        <div 
+          className="px-6 py-4 border-b"
+          style={{ borderColor: 'var(--border-color)' }}
+        >
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
             Create New Branch
           </h2>
         </div>
@@ -116,7 +122,7 @@ export default function BranchModal({
         <div className="px-6 py-4 space-y-4">
           {/* Branch Name Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
               Branch Name
             </label>
             <input
@@ -124,26 +130,34 @@ export default function BranchModal({
               value={branchName}
               onChange={(e) => setBranchName(e.target.value)}
               onKeyDown={handleKeyDown}
-              className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                validationError ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-indigo-500'
-              }`}
+              className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2"
+              style={{
+                backgroundColor: 'var(--bg-secondary)',
+                borderColor: validationError ? 'var(--color-error)' : 'var(--border-color)',
+                color: 'var(--text-primary)',
+              }}
               placeholder="feature/new-feature"
               autoFocus
             />
             {validationError && (
-              <p className="mt-1 text-xs text-red-600">{validationError}</p>
+              <p className="mt-1 text-xs" style={{ color: 'var(--color-error)' }}>{validationError}</p>
             )}
           </div>
 
           {/* Source Branch Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
               Create from Branch
             </label>
             <select
               value={sourceBranch}
               onChange={(e) => setSourceBranch(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2"
+              style={{
+                backgroundColor: 'var(--bg-secondary)',
+                borderColor: 'var(--border-color)',
+                color: 'var(--text-primary)',
+              }}
             >
               {branches.map((branch) => (
                 <option key={branch.name} value={branch.name}>
@@ -155,17 +169,40 @@ export default function BranchModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+        <div 
+          className="px-6 py-4 border-t flex justify-end gap-3"
+          style={{ borderColor: 'var(--border-color)' }}
+        >
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 transition-colors"
+            className="px-4 py-2 text-sm transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'var(--text-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }}
           >
             Cancel
           </button>
           <button
             onClick={handleCreate}
             disabled={creating || !isValid}
-            className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors flex items-center gap-2"
+            className="px-4 py-2 text-white text-sm rounded-md transition-colors flex items-center gap-2"
+            style={{
+              backgroundColor: creating || !isValid ? 'var(--text-tertiary)' : 'var(--color-primary)',
+            }}
+            onMouseEnter={(e) => {
+              if (!creating && isValid) {
+                e.currentTarget.style.opacity = '0.9';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!creating && isValid) {
+                e.currentTarget.style.opacity = '1';
+              }
+            }}
           >
             {creating ? (
               <>

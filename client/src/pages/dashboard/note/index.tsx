@@ -125,20 +125,27 @@ export default function NotePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-gray-600">Loading note...</div>
+      <div className="flex items-center justify-center h-full" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div style={{ color: 'var(--text-tertiary)' }}>Loading note...</div>
       </div>
     );
   }
 
   if (error || !note) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center h-full" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'Note not found'}</p>
+          <p className="mb-4" style={{ color: 'var(--color-error)' }}>{error || 'Note not found'}</p>
           <button
             onClick={() => navigate('/notes')}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            className="px-4 py-2 text-white rounded-md transition-colors"
+            style={{ backgroundColor: 'var(--color-primary)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.opacity = '0.9';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.opacity = '1';
+            }}
           >
             Back to Notes
           </button>
@@ -148,13 +155,19 @@ export default function NotePage() {
   }
 
   return (
-    <div className="h-full bg-white flex flex-col">
+    <div className="h-full flex flex-col" style={{ backgroundColor: 'var(--bg-primary)' }}>
       {/* Header */}
-      <div className="border-b border-gray-200 bg-white px-6 py-4">
+      <div 
+        className="border-b px-6 py-4"
+        style={{ 
+          borderColor: 'var(--border-color)',
+          backgroundColor: 'var(--bg-primary)',
+        }}
+      >
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">{note.name}</h1>
-            <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+            <h1 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>{note.name}</h1>
+            <div className="flex items-center gap-4 text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
               <span>{note.path}</span>
               {note.size && <span>{formatSize(note.size)}</span>}
               {note.modifiedDate && (
@@ -172,7 +185,16 @@ export default function NotePage() {
                   <button
                     onClick={handleStage}
                     disabled={staging}
-                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                    className="p-2 rounded-md transition-colors"
+                    style={{ color: 'var(--text-tertiary)' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'var(--text-primary)';
+                      e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = 'var(--text-tertiary)';
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
                     title="Stage changes"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -184,7 +206,16 @@ export default function NotePage() {
                   <button
                     onClick={handleUnstage}
                     disabled={staging}
-                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                    className="p-2 rounded-md transition-colors"
+                    style={{ color: 'var(--text-tertiary)' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'var(--text-primary)';
+                      e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = 'var(--text-tertiary)';
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
                     title="Unstage changes"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -196,7 +227,16 @@ export default function NotePage() {
                 {/* Edit button */}
                 <button
                   onClick={handleEdit}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                  className="p-2 rounded-md transition-colors"
+                  style={{ color: 'var(--text-tertiary)' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                    e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--text-tertiary)';
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                   title="Edit note"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,7 +247,16 @@ export default function NotePage() {
                 {/* Delete button */}
                 <button
                   onClick={handleDelete}
-                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                  className="p-2 rounded-md transition-colors"
+                  style={{ color: 'var(--text-tertiary)' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--color-error)';
+                    e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--text-tertiary)';
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                   title="Delete note"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,7 +269,14 @@ export default function NotePage() {
                 {/* Cancel button */}
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-3 py-2 text-gray-600 hover:text-gray-800 text-sm transition-colors"
+                  className="px-3 py-2 text-sm transition-colors"
+                  style={{ color: 'var(--text-secondary)' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--text-secondary)';
+                  }}
                 >
                   Cancel
                 </button>
@@ -228,7 +284,14 @@ export default function NotePage() {
                 {/* Save button - Primary action */}
                 <button
                   onClick={handleSave}
-                  className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 text-white text-sm rounded-md transition-colors flex items-center gap-2"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = '0.9';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = '1';
+                  }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -249,7 +312,12 @@ export default function NotePage() {
               <textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="w-full h-full px-4 py-3 border border-gray-300 rounded-md font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full h-full px-4 py-3 border rounded-md font-mono text-sm resize-none focus:outline-none focus:ring-2"
+                style={{
+                  backgroundColor: 'var(--bg-secondary)',
+                  borderColor: 'var(--border-color)',
+                  color: 'var(--text-primary)',
+                }}
                 placeholder="Start writing your note..."
               />
             </div>
@@ -257,7 +325,7 @@ export default function NotePage() {
         ) : (
           <div className="h-full overflow-y-auto p-6">
             <div className="max-w-none">
-              <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 leading-relaxed">
+              <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
                 {note.content || 'No content yet. Click Edit to start writing.'}
               </pre>
             </div>

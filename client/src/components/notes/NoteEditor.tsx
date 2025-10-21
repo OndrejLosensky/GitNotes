@@ -20,19 +20,54 @@ export default function NoteEditor({ content, onSave, onCancel, saving = false }
         value={editContent}
         onChange={(e) => setEditContent(e.target.value)}
         className="flex-1 w-full px-4 py-3 border-0 focus:ring-0 font-mono text-sm resize-none"
+        style={{
+          backgroundColor: 'var(--bg-primary)',
+          color: 'var(--text-primary)',
+        }}
         placeholder="Start typing..."
       />
-      <div className="border-t border-gray-200 px-4 py-3 flex gap-2">
+      <div 
+        className="border-t px-4 py-3 flex gap-2"
+        style={{ borderColor: 'var(--border-color)' }}
+      >
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-green-400 text-sm"
+          className="px-4 py-2 rounded-md text-sm"
+          style={{
+            backgroundColor: saving ? 'var(--text-tertiary)' : 'var(--color-success)',
+            color: 'white',
+          }}
+          onMouseEnter={(e) => {
+            if (!saving) {
+              e.currentTarget.style.backgroundColor = 'var(--color-success)';
+              e.currentTarget.style.opacity = '0.9';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!saving) {
+              e.currentTarget.style.backgroundColor = 'var(--color-success)';
+              e.currentTarget.style.opacity = '1';
+            }
+          }}
         >
           {saving ? 'Saving...' : 'Save'}
         </button>
         <button
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm"
+          className="px-4 py-2 rounded-md text-sm"
+          style={{
+            backgroundColor: 'var(--text-secondary)',
+            color: 'white',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--text-primary)';
+            e.currentTarget.style.opacity = '0.9';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--text-secondary)';
+            e.currentTarget.style.opacity = '1';
+          }}
         >
           Cancel
         </button>

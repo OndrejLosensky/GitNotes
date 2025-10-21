@@ -30,13 +30,25 @@ export default function HistoryPage() {
   return (
     <div className="h-full flex">
       {/* Left Panel - Commit List */}
-      <div className="w-80 border-r border-gray-200 flex flex-col bg-white">
-        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-          <h2 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+      <div 
+        className="w-80 border-r flex flex-col"
+        style={{
+          borderColor: 'var(--border-color)',
+          backgroundColor: 'var(--bg-primary)',
+        }}
+      >
+        <div 
+          className="px-4 py-3 border-b flex-shrink-0"
+          style={{
+            borderColor: 'var(--border-color)',
+            backgroundColor: 'var(--bg-secondary)',
+          }}
+        >
+          <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
             Commit History
           </h2>
           {!loading && (
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
               {commits.length} commit{commits.length !== 1 ? 's' : ''}
             </p>
           )}
@@ -52,7 +64,7 @@ export default function HistoryPage() {
       </div>
 
       {/* Right Panel - Commit Details */}
-      <div className="flex-1 bg-white">
+      <div className="flex-1" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <CommitDetail 
           commitDetails={commitDetails}
           loading={detailsLoading}

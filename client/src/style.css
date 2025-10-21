@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+/* Global theme styles */
+html, body {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary);
+}
+
+#root {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
 /* Import custom styles */
 @import "./styles/layout.css";
 @import "./styles/sidebar.css";

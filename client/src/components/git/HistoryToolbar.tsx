@@ -3,6 +3,7 @@ import { useGitBranches } from '../../hooks/useGitBranches';
 import { useGitStatus } from '../../hooks/useGitStatus';
 import BranchModal from './BranchModal';
 import apiClient from '../../api/client';
+import { showSuccess, showError } from '../../utils/toast';
 
 interface HistoryToolbarProps {
   onRefreshCommits: () => void;
@@ -33,13 +34,13 @@ export default function HistoryToolbar({ onRefreshCommits, onRefreshNotes }: His
     setPulling(true);
     try {
       const response = await apiClient.post('/git/pull');
-      alert(`Pull successful: ${response.data.message}`);
+      showSuccess(`Pull successful: ${response.data.message}`);
       // Refresh everything after pull
       await refetchGitStatus();
       onRefreshCommits();
       onRefreshNotes();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to pull from GitHub');
+      showError(error.response?.data?.message || 'Failed to pull from GitHub');
     } finally {
       setPulling(false);
     }
@@ -49,16 +50,16 @@ export default function HistoryToolbar({ onRefreshCommits, onRefreshNotes }: His
     setPushing(true);
     try {
       const response = await apiClient.post('/git/push');
-      alert(`Push successful: ${response.data.message}`);
+      showSuccess(`Push successful: ${response.data.message}`);
       // Refresh everything after push
       await refetchGitStatus();
       onRefreshCommits();
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Failed to push to GitHub';
       if (error.response?.status === 409) {
-        alert(`${errorMessage}\n\nTry pulling the latest changes first.`);
+        showError(`${errorMessage}. Try pulling the latest changes first.`);
       } else {
-        alert(errorMessage);
+        showError(errorMessage);
       }
     } finally {
       setPushing(false);

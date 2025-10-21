@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import apiClient from '../../api/client';
+import { showSuccess, showError, showWarning } from '../../utils/toast';
 
 interface CommitSectionProps {
   onClose: () => void;
@@ -11,18 +12,18 @@ export default function CommitSection({ onClose }: CommitSectionProps) {
 
   const handleCommit = async () => {
     if (!message.trim() || message.trim().length < 3) {
-      alert('Commit message must be at least 3 characters');
+      showWarning('Commit message must be at least 3 characters');
       return;
     }
 
     setCommitting(true);
     try {
       const response = await apiClient.post('/git/commit', { message });
-      alert(`Committed: ${response.data.hash.substring(0, 7)}`);
+      showSuccess(`Committed: ${response.data.hash.substring(0, 7)}`);
       setMessage('');
       onClose();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to commit');
+      showError(error.response?.data?.message || 'Failed to commit');
     } finally {
       setCommitting(false);
     }

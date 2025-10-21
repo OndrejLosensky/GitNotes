@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { type TreeNode } from '../../types';
 import apiClient from '../../api/client';
+import { showError } from '../../utils/toast';
 
 interface CreateItemModalProps {
   isOpen: boolean;
@@ -101,7 +102,7 @@ export default function CreateItemModal({ isOpen, onClose, onSuccess, notesTree 
     } catch (error: any) {
       console.error('Create error:', error);
       const errorMessage = error.response?.data?.message || error.message || `Failed to create ${itemType}`;
-      alert(errorMessage);
+      showError(errorMessage);
     } finally {
       setCreating(false);
     }

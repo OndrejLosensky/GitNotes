@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../../../api/client';
 import { useAppContext } from '../../../contexts/AppContext';
+import { showSuccess, showError } from '../../../utils/toast';
 
 interface NoteContent {
   name: string;
@@ -73,10 +74,11 @@ export default function NotePage() {
       await apiClient.put(`/notes/${notePath}`, { content: editContent });
       setNote({ ...note!, content: editContent });
       setIsEditing(false);
+      showSuccess('Note saved successfully');
       // Trigger refresh to update git status in notes tree
       triggerRefresh('notes');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to update note');
+      showError(err.response?.data?.message || 'Failed to update note');
     }
   };
 
@@ -90,7 +92,7 @@ export default function NotePage() {
       triggerRefresh('notes');
       navigate('/dashboard');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete note');
+      showError(err.response?.data?.message || 'Failed to delete note');
     }
   };
 
@@ -99,14 +101,14 @@ export default function NotePage() {
     setStaging(true);
     try {
       await apiClient.post('/git/stage', { files: [notePath] });
-      alert('File staged successfully');
+      showSuccess('File staged successfully');
       // Refresh note to update git status
       const response = await apiClient.get(`/notes/content/${notePath}`);
       setNote(response.data);
       // Trigger refresh to update git status in notes tree
       triggerRefresh('notes');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to stage file');
+      showError(err.response?.data?.message || 'Failed to stage file');
     } finally {
       setStaging(false);
     }
@@ -117,14 +119,14 @@ export default function NotePage() {
     setStaging(true);
     try {
       await apiClient.post('/git/unstage', { files: [notePath] });
-      alert('File unstaged successfully');
+      showSuccess('File unstaged successfully');
       // Refresh note to update git status
       const response = await apiClient.get(`/notes/content/${notePath}`);
       setNote(response.data);
       // Trigger refresh to update git status in notes tree
       triggerRefresh('notes');
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to unstage file');
+      showError(err.response?.data?.message || 'Failed to unstage file');
     } finally {
       setStaging(false);
     }

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import LoginPage from './pages/auth/index.tsx';
 import NotesPage from './pages/dashboard/index.tsx';
 import NotePage from './pages/dashboard/note/index.tsx';
@@ -13,8 +14,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <>
+      <Toaster 
+        position="bottom-right"
+        containerStyle={{
+          bottom: 20,
+          right: 20,
+        }}
+      />
+      <BrowserRouter>
+        <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/dashboard"
@@ -61,7 +70,8 @@ function App() {
           element={<Navigate to={isAuthenticated() ? "/dashboard" : "/login"} replace />}
         />
       </Routes>
-    </BrowserRouter>
+      </BrowserRouter>
+    </>
   );
 }
 

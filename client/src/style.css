@@ -11,6 +11,14 @@ html, body {
   color: var(--text-primary);
 }
 
+/* Toast notification color variables */
+:root {
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+}
+
 /* Import custom styles */
 @import "./styles/layout.css";
 @import "./styles/sidebar.css";

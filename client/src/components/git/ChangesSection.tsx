@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGitStatus } from '../../hooks/useGitStatus';
 import { useAppContext } from '../../contexts/AppContext';
 import apiClient from '../../api/client';
+import { showSuccess, showError, showWarning } from '../../utils/toast';
 
 export default function ChangesSection() {
   const { gitStatus, loading, refetch } = useGitStatus();
@@ -12,25 +13,25 @@ export default function ChangesSection() {
 
   const handleCommit = async () => {
     if (!commitMessage.trim() || commitMessage.trim().length < 3) {
-      alert('Commit message must be at least 3 characters');
+      showWarning('Commit message must be at least 3 characters');
       return;
     }
 
     if (stagedCount === 0) {
-      alert('No staged files to commit. Stage files first.');
+      showWarning('No staged files to commit. Stage files first.');
       return;
     }
 
     setCommitting(true);
     try {
       const response = await apiClient.post('/git/commit', { message: commitMessage });
-      alert(`Committed: ${response.data.hash.substring(0, 7)}`);
+      showSuccess(`Committed: ${response.data.hash.substring(0, 7)}`);
       setCommitMessage('');
       await refetch();
       // Trigger refresh for commits after successful commit
       triggerRefresh('commits');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to commit');
+      showError(error.response?.data?.message || 'Failed to commit');
     } finally {
       setCommitting(false);
     }
@@ -40,16 +41,16 @@ export default function ChangesSection() {
     setPushing(true);
     try {
       const response = await apiClient.post('/git/push');
-      alert(`Push successful: ${response.data.message}`);
+      showSuccess(`Push successful: ${response.data.message}`);
       await refetch();
       // Trigger refresh for commits after successful push
       triggerRefresh('commits');
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Failed to push to GitHub';
       if (error.response?.status === 409) {
-        alert(`${errorMessage}\n\nTry pulling the latest changes first.`);
+        showError(`${errorMessage}. Try pulling the latest changes first.`);
       } else {
-        alert(errorMessage);
+        showError(errorMessage);
       }
     } finally {
       setPushing(false);
@@ -61,7 +62,7 @@ export default function ChangesSection() {
       await apiClient.post('/git/stage', { files: [filePath] });
       await refetch();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to stage file');
+      showError(error.response?.data?.message || 'Failed to stage file');
     }
   };
 
@@ -70,7 +71,7 @@ export default function ChangesSection() {
       await apiClient.post('/git/unstage', { files: [filePath] });
       await refetch();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to unstage file');
+      showError(error.response?.data?.message || 'Failed to unstage file');
     }
   };
 
@@ -82,7 +83,7 @@ export default function ChangesSection() {
       await apiClient.post('/git/stage', { files: filesToStage });
       await refetch();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to stage all files');
+      showError(error.response?.data?.message || 'Failed to stage all files');
     }
   };
 
@@ -94,7 +95,7 @@ export default function ChangesSection() {
       await apiClient.post('/git/unstage', { files: filesToUnstage });
       await refetch();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to unstage all files');
+      showError(error.response?.data?.message || 'Failed to unstage all files');
     }
   };
 

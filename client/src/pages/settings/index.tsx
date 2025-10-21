@@ -37,7 +37,7 @@ export default function SettingsPage() {
                 }}
               >
                 {/* Theme Preview */}
-                <div className="h-24 flex">
+                <div className="h-32 flex">
                   {/* Sidebar Preview */}
                   <div 
                     className="w-20 p-3 flex flex-col gap-1.5"

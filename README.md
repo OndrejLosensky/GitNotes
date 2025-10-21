@@ -11,10 +11,7 @@ A modern, git-controlled note-taking application built with NestJS and React, de
 
 ## Quick Links
 
-[Client Documentation](./client/README.md)
-[Server Documentation](./server/README.md) 
-[API](./server/api.md)
-[Setup Guide](SETUP_GUIDE.md)
+[Client Documentation](./client/README.md) • [Server Documentation](./server/README.md) • [API](./server/api.md) • [Setup Guide](SETUP_GUIDE.md)
 
 
 ## Future

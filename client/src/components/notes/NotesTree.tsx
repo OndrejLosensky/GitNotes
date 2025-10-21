@@ -10,7 +10,7 @@ import ContextMenu from './ContextMenu.tsx';
 
 export default function NotesTree() {
   const navigate = useNavigate();
-  const { notesTree, loading, error, refetch, deleteItem } = useNotes();
+  const { notesTree, loading, error, refetch, deleteItem, getCacheStats, invalidateCache } = useNotes();
   const { searchQuery, setSearchQuery, searchResults, loading: searchLoading, error: searchError, clearSearch } = useNoteSearch();
   const { registerRefreshCallback } = useAppContext();
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -19,10 +19,14 @@ export default function NotesTree() {
     position: { x: number; y: number };
   } | null>(null);
 
-  // Register refresh callback for notes
+  // Register refresh callback for notes - force refresh to invalidate cache
   useEffect(() => {
-    registerRefreshCallback('notes', refetch);
-  }, [registerRefreshCallback, refetch]);
+    const forceRefresh = () => {
+      invalidateCache('branch switch');
+      refetch(true); // Force refresh bypassing cache
+    };
+    registerRefreshCallback('notes', forceRefresh);
+  }, [registerRefreshCallback, refetch, invalidateCache]);
 
   const handleSearchResultClick = (result: SearchResult) => {
     navigate(`/dashboard/note/${result.path}`);
@@ -93,9 +97,30 @@ export default function NotesTree() {
         }}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
-            Explorer
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
+              Explorer
+            </h2>
+            {(() => {
+              const cacheStats = getCacheStats();
+              if (cacheStats.cacheAge !== null && cacheStats.cacheAge < 30000) { // Show if cache is less than 30 seconds old
+                return (
+                  <div 
+                    className="text-xs px-1 py-0.5 rounded opacity-60"
+                    style={{
+                      backgroundColor: 'transparent',
+                      color: 'var(--text-tertiary)',
+                      fontSize: '10px',
+                    }}
+                    title={`Cache hit rate: ${cacheStats.hitRate} (${cacheStats.hits}/${cacheStats.total})`}
+                  >
+                    ⚡
+                  </div>
+                );
+              }
+              return null;
+            })()}
+          </div>
           <button
             onClick={() => setShowCreateModal(true)}
             className="p-1 rounded transition-all duration-200"

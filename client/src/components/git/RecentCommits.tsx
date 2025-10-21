@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import apiClient from '../../api/client';
 import { useAppContext } from '../../contexts/AppContext';
 import { type CommitInfo } from '../../types';
@@ -13,7 +13,7 @@ export default function RecentCommits({ isCollapsed, onToggle }: RecentCommitsPr
   const [loading, setLoading] = useState(true);
   const { registerRefreshCallback } = useAppContext();
 
-  const fetchCommits = async () => {
+  const fetchCommits = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiClient.get('/git/history?limit=10');
@@ -23,14 +23,14 @@ export default function RecentCommits({ isCollapsed, onToggle }: RecentCommitsPr
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchCommits();
     
     // Register refresh callback for commits
     registerRefreshCallback('commits', fetchCommits);
-  }, [registerRefreshCallback]); 
+  }, [registerRefreshCallback, fetchCommits]); 
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

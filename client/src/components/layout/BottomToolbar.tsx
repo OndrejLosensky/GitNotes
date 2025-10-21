@@ -204,7 +204,7 @@ export default function BottomToolbar() {
       {/* Right section: Settings */}
       <div className="flex items-center ml-auto">
         <button 
-          onClick={() => navigate('/settings')}
+          onClick={() => navigate('/dashboard/settings')}
           className="p-1 rounded transition-colors"
           title="Settings"
           style={{ backgroundColor: 'transparent' }}

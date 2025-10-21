@@ -15,13 +15,13 @@ export default function NoteItem({ node, level, onContextMenu }: NoteItemProps) 
   const [isExpanded, setIsExpanded] = useState(false);
   const isFolder = node.type === 'folder';
   const hasChildren = node.children && node.children.length > 0;
-  const isActive = location.pathname === `/note/${node.path}`;
+  const isActive = location.pathname === `/dashboard/note/${node.path}`;
 
   const handleClick = () => {
     if (isFolder) {
       setIsExpanded(!isExpanded);
     } else {
-      navigate(`/note/${node.path}`);
+      navigate(`/dashboard/note/${node.path}`);
     }
   };
 

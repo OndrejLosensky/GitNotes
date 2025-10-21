@@ -17,7 +17,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
-          path="/notes"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <MainLayout>
@@ -27,7 +27,7 @@ function App() {
           }
         />
         <Route
-          path="/note/*"
+          path="/dashboard/note/*"
           element={
             <ProtectedRoute>
               <MainLayout>
@@ -37,7 +37,7 @@ function App() {
           }
         />
         <Route
-          path="/settings"
+          path="/dashboard/settings"
           element={
             <ProtectedRoute>
               <MainLayout>
@@ -47,7 +47,7 @@ function App() {
           }
         />
         <Route
-          path="/history"
+          path="/dashboard/history"
           element={
             <ProtectedRoute>
               <MainLayout topToolbar={<HistoryToolbarWrapper />}>
@@ -58,7 +58,7 @@ function App() {
         />
         <Route
           path="/"
-          element={<Navigate to={isAuthenticated() ? "/notes" : "/login"} replace />}
+          element={<Navigate to={isAuthenticated() ? "/dashboard" : "/login"} replace />}
         />
       </Routes>
     </BrowserRouter>

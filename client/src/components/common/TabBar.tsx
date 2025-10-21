@@ -31,7 +31,7 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
   ];
 
   const handleHistoryClick = () => {
-    navigate('/history');
+    navigate('/dashboard/history');
   };
 
   return (

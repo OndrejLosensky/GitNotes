@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import apiClient from '../api/client';
 import { type GitStatus } from '../types';
 
@@ -7,7 +7,7 @@ export function useGitStatus(autoRefresh: boolean = false, interval: number = 50
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchGitStatus = async () => {
+  const fetchGitStatus = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -19,7 +19,7 @@ export function useGitStatus(autoRefresh: boolean = false, interval: number = 50
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchGitStatus();
@@ -28,7 +28,7 @@ export function useGitStatus(autoRefresh: boolean = false, interval: number = 50
       const intervalId = setInterval(fetchGitStatus, interval);
       return () => clearInterval(intervalId);
     }
-  }, [autoRefresh, interval]);
+  }, [autoRefresh, interval, fetchGitStatus]);
 
   return {
     gitStatus,

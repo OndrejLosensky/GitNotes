@@ -17,7 +17,7 @@ export default function LoginPage() {
     try {
       const response = await apiClient.post('/auth/login', { password });
       setToken(response.data.access_token);
-      navigate('/notes');
+      navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid password');
     } finally {

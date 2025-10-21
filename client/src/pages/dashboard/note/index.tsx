@@ -82,7 +82,7 @@ export default function NotePage() {
 
     try {
       await apiClient.delete(`/notes/${notePath}`);
-      navigate('/notes');
+      navigate('/dashboard');
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to delete note');
     }
@@ -137,7 +137,7 @@ export default function NotePage() {
         <div className="text-center">
           <p className="mb-4" style={{ color: 'var(--color-error)' }}>{error || 'Note not found'}</p>
           <button
-            onClick={() => navigate('/notes')}
+            onClick={() => navigate('/dashboard')}
             className="px-4 py-2 text-white rounded-md transition-colors"
             style={{ backgroundColor: 'var(--color-primary)' }}
             onMouseEnter={(e) => {

@@ -25,7 +25,7 @@ export default function NotesTree() {
   }, [registerRefreshCallback, refetch]);
 
   const handleSearchResultClick = (result: SearchResult) => {
-    navigate(`/note/${result.path}`);
+    navigate(`/dashboard/note/${result.path}`);
   };
 
   const highlightMatch = (text: string, query: string) => {

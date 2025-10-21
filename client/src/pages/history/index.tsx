@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import apiClient from '../../api/client';
 import { type CommitInfo } from '../../types';
 import CommitList from '../../components/git/CommitList';
@@ -13,9 +13,9 @@ export default function HistoryPage() {
   const [selectedHash, setSelectedHash] = useState<string | null>(null);
   
   const { commitDetails, loading: detailsLoading, error: detailsError } = useCommitDetails(selectedHash);
-  const { registerRefreshCallback, triggerRefresh } = useAppContext();
+  const { registerRefreshCallback } = useAppContext();
 
-  const fetchCommits = async () => {
+  const fetchCommits = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiClient.get('/git/history?limit=50');
@@ -25,14 +25,14 @@ export default function HistoryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchCommits();
     
     // Register this component's refresh callback
     registerRefreshCallback('commits', fetchCommits);
-  }, [registerRefreshCallback]);
+  }, [registerRefreshCallback, fetchCommits]);
 
   return (
     <div className="h-full flex">

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from 'react';
 import { type TabType, type TreeNode, type GitStatus } from '../types';
 
 type RefreshType = 'notes' | 'commits' | 'all';
@@ -24,8 +24,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [notesTree, setNotesTree] = useState<TreeNode[]>([]);
   const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
   
-  // Refresh callback registry
-  const [refreshCallbacks, setRefreshCallbacks] = useState<{
+  // Use refs to avoid infinite re-renders
+  const refreshCallbacksRef = useRef<{
     notes: (() => void)[];
     commits: (() => void)[];
   }>({ notes: [], commits: [] });
@@ -41,28 +41,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const registerRefreshCallback = useCallback((type: RefreshType, callback: () => void) => {
-    setRefreshCallbacks(prev => {
-      if (type === 'all') {
-        return {
-          notes: [...prev.notes, callback],
-          commits: [...prev.commits, callback]
-        };
-      }
-      return {
-        ...prev,
-        [type]: [...prev[type], callback]
+    if (type === 'all') {
+      refreshCallbacksRef.current = {
+        notes: [...refreshCallbacksRef.current.notes, callback],
+        commits: [...refreshCallbacksRef.current.commits, callback]
       };
-    });
+    } else {
+      refreshCallbacksRef.current = {
+        ...refreshCallbacksRef.current,
+        [type]: [...refreshCallbacksRef.current[type], callback]
+      };
+    }
   }, []);
 
   const triggerRefresh = useCallback((type: RefreshType) => {
     if (type === 'all') {
-      refreshCallbacks.notes.forEach(callback => callback());
-      refreshCallbacks.commits.forEach(callback => callback());
+      refreshCallbacksRef.current.notes.forEach(callback => callback());
+      refreshCallbacksRef.current.commits.forEach(callback => callback());
     } else {
-      refreshCallbacks[type].forEach(callback => callback());
+      refreshCallbacksRef.current[type].forEach(callback => callback());
     }
-  }, [refreshCallbacks]);
+  }, []);
 
   return (
     <AppContext.Provider

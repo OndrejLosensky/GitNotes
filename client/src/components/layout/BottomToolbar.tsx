@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGitStatus } from '../../hooks/useGitStatus';
 import { useGitBranches } from '../../hooks/useGitBranches';
 import BranchModal from '../git/BranchModal';
+import { removeToken } from '../../utils/auth';
 
 export default function BottomToolbar() {
   const navigate = useNavigate();
@@ -45,6 +46,13 @@ export default function BottomToolbar() {
       if (success) {
         setShowBranchMenu(false);
       }
+    }
+  };
+
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to logout?')) {
+      removeToken();
+      navigate('/login');
     }
   };
 
@@ -93,6 +101,28 @@ export default function BottomToolbar() {
                 borderColor: 'var(--border-color)',
               }}
             >
+              {/* Create New Branch - moved to top */}
+              <div className="py-1">
+                <button
+                  onClick={() => {
+                    setShowBranchMenu(false);
+                    setShowBranchModal(true);
+                  }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm"
+                  style={{ color: 'var(--text-secondary)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-tertiary)' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Create New Branch
+                </button>
+              </div>
+
+              {/* Separator */}
+              <div className="border-t" style={{ borderColor: 'var(--border-color)' }}></div>
+
               {/* Branch List */}
               <div className="py-1">
                 {branches.map((branch) => (
@@ -154,28 +184,6 @@ export default function BottomToolbar() {
                   </div>
                 ))}
               </div>
-
-              {/* Separator */}
-              <div className="border-t" style={{ borderColor: 'var(--border-color)' }}></div>
-
-              {/* Create New Branch */}
-              <div className="py-1">
-                <button
-                  onClick={() => {
-                    setShowBranchMenu(false);
-                    setShowBranchModal(true);
-                  }}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm"
-                  style={{ color: 'var(--text-secondary)' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-tertiary)' }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Create New Branch
-                </button>
-              </div>
             </div>
           )}
         </div>
@@ -201,8 +209,8 @@ export default function BottomToolbar() {
         </div>
       </div>
 
-      {/* Right section: Settings */}
-      <div className="flex items-center ml-auto">
+      {/* Right section: Settings and Logout */}
+      <div className="flex items-center ml-auto gap-2">
         <button 
           onClick={() => navigate('/dashboard/settings')}
           className="p-1 rounded transition-colors"
@@ -214,6 +222,19 @@ export default function BottomToolbar() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ opacity: 0.7 }}>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
+        
+        <button 
+          onClick={handleLogout}
+          className="p-1 rounded transition-colors"
+          title="Logout"
+          style={{ backgroundColor: 'transparent' }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ opacity: 0.7 }}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
         </button>
       </div>

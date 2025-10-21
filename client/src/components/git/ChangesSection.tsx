@@ -209,17 +209,17 @@ export default function ChangesSection() {
               disabled={pushing}
               className="w-full px-3 py-2 text-sm rounded-md transition-colors flex items-center justify-center gap-2"
               style={{
-                backgroundColor: pushing ? 'var(--text-tertiary)' : 'var(--text-secondary)',
+                backgroundColor: pushing ? 'var(--text-tertiary)' : 'var(--color-primary)',
                 color: 'white',
               }}
               onMouseEnter={(e) => {
                 if (!pushing) {
-                  e.currentTarget.style.backgroundColor = 'var(--text-primary)';
+                  e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!pushing) {
-                  e.currentTarget.style.backgroundColor = 'var(--text-secondary)';
+                  e.currentTarget.style.backgroundColor = 'var(--color-primary)';
                 }
               }}
             >

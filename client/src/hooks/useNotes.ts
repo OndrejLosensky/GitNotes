@@ -47,7 +47,6 @@ export function useNotes() {
     // Check cache first unless force refresh is requested
     if (!forceRefresh && isCacheValid(cacheRef.current)) {
       logCacheHit();
-      console.log('Using cached notes data');
       setNotes(cacheRef.current!.notes);
       setNotesTree(cacheRef.current!.notesTree);
       return;
@@ -57,7 +56,6 @@ export function useNotes() {
     setLoading(true);
     setError(null);
     try {
-      console.log('Fetching fresh notes data from API');
       const [notesResponse, treeResponse] = await Promise.all([
         apiClient.get('/notes'),
         apiClient.get('/notes/tree')
@@ -97,7 +95,8 @@ export function useNotes() {
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to delete item';
       setError(errorMessage);
-      throw new Error(errorMessage);
+      // Throw a simple string instead of Error object to avoid React rendering issues
+      throw errorMessage;
     }
   };
 

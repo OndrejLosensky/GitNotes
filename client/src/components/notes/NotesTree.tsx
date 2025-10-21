@@ -18,6 +18,7 @@ export default function NotesTree() {
     node: TreeNode;
     position: { x: number; y: number };
   } | null>(null);
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   // Register refresh callback for notes - force refresh to invalidate cache
   useEffect(() => {
@@ -51,6 +52,7 @@ export default function NotesTree() {
   const handleContextMenu = (e: React.MouseEvent, node: TreeNode) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log('Context menu opened for:', { name: node.name, path: node.path, type: node.type });
     setContextMenu({
       node,
       position: { x: e.clientX, y: e.clientY }
@@ -62,12 +64,43 @@ export default function NotesTree() {
       await deleteItem(path);
       setContextMenu(null);
     } catch (error) {
-      console.error('Failed to delete item:', error);
+      // Handle both string and Error object errors
+      const errorMsg = typeof error === 'string' ? error : (error instanceof Error ? error.message : 'Failed to delete item');
+      console.error('Failed to delete item:', errorMsg);
     }
   };
 
   const closeContextMenu = () => {
     setContextMenu(null);
+  };
+
+  const handleFolderToggle = (folderPath: string) => {
+    setExpandedFolders(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(folderPath)) {
+        newSet.delete(folderPath);
+      } else {
+        newSet.add(folderPath);
+      }
+      return newSet;
+    });
+  };
+
+  const handleCreateSuccess = (createdPath?: string) => {
+    // Force refresh to get the new item
+    refetch(true);
+    
+    // If a path was created, expand the parent folder
+    if (createdPath) {
+      const parentPath = createdPath.substring(0, createdPath.lastIndexOf('/'));
+      if (parentPath) {
+        setExpandedFolders(prev => new Set([...prev, parentPath]));
+      }
+    }
+  };
+
+  const isFolderExpanded = (folderPath: string) => {
+    return expandedFolders.has(folderPath);
   };
 
 
@@ -274,6 +307,10 @@ export default function NotesTree() {
                     node={node} 
                     level={0} 
                     onContextMenu={(e) => handleContextMenu(e, node)}
+                    isExpanded={isFolderExpanded(node.path)}
+                    onToggleExpanded={() => handleFolderToggle(node.path)}
+                    expandedFolders={expandedFolders}
+                    onFolderToggle={handleFolderToggle}
                   />
                 ))}
               </div>
@@ -285,7 +322,7 @@ export default function NotesTree() {
         <CreateItemModal
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
-          onSuccess={refetch}
+          onSuccess={handleCreateSuccess}
           notesTree={notesTree}
         />
 

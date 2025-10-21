@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { type TreeNode } from '../../types';
 import StatusDot from '../common/StatusDot.tsx';
@@ -7,19 +6,30 @@ interface NoteItemProps {
   node: TreeNode;
   level: number;
   onContextMenu?: (e: React.MouseEvent, node: TreeNode) => void;
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
+  expandedFolders?: Set<string>;
+  onFolderToggle?: (folderPath: string) => void;
 }
 
-export default function NoteItem({ node, level, onContextMenu }: NoteItemProps) {
+export default function NoteItem({ 
+  node, 
+  level, 
+  onContextMenu, 
+  isExpanded = false, 
+  onToggleExpanded,
+  expandedFolders,
+  onFolderToggle 
+}: NoteItemProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isExpanded, setIsExpanded] = useState(false);
   const isFolder = node.type === 'folder';
   const hasChildren = node.children && node.children.length > 0;
   const isActive = location.pathname === `/dashboard/note/${node.path}`;
 
   const handleClick = () => {
     if (isFolder) {
-      setIsExpanded(!isExpanded);
+      onToggleExpanded?.();
     } else {
       navigate(`/dashboard/note/${node.path}`);
     }
@@ -190,7 +200,16 @@ export default function NoteItem({ node, level, onContextMenu }: NoteItemProps) 
       {isFolder && isExpanded && hasChildren && (
         <div>
           {node.children!.map((child) => (
-            <NoteItem key={child.path} node={child} level={level + 1} onContextMenu={onContextMenu} />
+            <NoteItem 
+              key={child.path} 
+              node={child} 
+              level={level + 1} 
+              onContextMenu={onContextMenu}
+              isExpanded={expandedFolders?.has(child.path) || false}
+              onToggleExpanded={() => onFolderToggle?.(child.path)}
+              expandedFolders={expandedFolders}
+              onFolderToggle={onFolderToggle}
+            />
           ))}
         </div>
       )}

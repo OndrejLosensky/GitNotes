@@ -154,6 +154,27 @@ export default function HistoryToolbar({ onRefreshCommits, onRefreshNotes }: His
                 }}
               >
                 <div className="py-1">
+                  {/* Create Branch button at the top */}
+                  <button
+                    onClick={() => {
+                      setShowBranchDropdown(false);
+                      setShowBranchModal(true);
+                    }}
+                    className="w-full px-3 py-2 text-left text-sm flex items-center gap-2"
+                    style={{ color: 'var(--text-primary)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <span>Create Branch</span>
+                  </button>
+                  
+                  {/* Separator */}
+                  <div className="border-t my-1" style={{ borderColor: 'var(--border-color)' }}></div>
+                  
+                  {/* Branch list */}
                   {branches.map((branch) => (
                     <button
                       key={branch.name}
@@ -182,23 +203,6 @@ export default function HistoryToolbar({ onRefreshCommits, onRefreshNotes }: His
                       )}
                     </button>
                   ))}
-                  <div className="border-t" style={{ borderColor: 'var(--border-color)' }}>
-                    <button
-                      onClick={() => {
-                        setShowBranchDropdown(false);
-                        setShowBranchModal(true);
-                      }}
-                      className="w-full px-3 py-2 text-left text-sm flex items-center gap-2"
-                      style={{ color: 'var(--text-primary)' }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      <span>Create Branch</span>
-                    </button>
-                  </div>
                 </div>
               </div>
             )}

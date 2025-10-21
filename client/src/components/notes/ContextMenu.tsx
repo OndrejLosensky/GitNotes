@@ -47,11 +47,13 @@ export default function ContextMenu({ node, onDelete, isOpen, onClose, position 
   const handleConfirmDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setDeleteError(null);
+    console.log('Confirming deletion of:', { name: node.name, path: node.path, type: node.type });
     try {
       await onDelete(node.path);
       onClose();
     } catch (error: any) {
-      const errorMsg = error.message || 'Failed to delete item';
+      // Handle both string and Error object errors
+      const errorMsg = typeof error === 'string' ? error : (error.message || 'Failed to delete item');
       console.error('Failed to delete item:', errorMsg);
       setDeleteError(errorMsg);
     }

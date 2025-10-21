@@ -648,7 +648,9 @@ export class NotesService {
       // Check if folder is empty
       const files = fs.readdirSync(fullPath);
       if (files.length > 0) {
-        throw new ConflictException('Cannot delete non-empty folder');
+        const fileList = files.slice(0, 3).join(', ');
+        const moreFiles = files.length > 3 ? ` and ${files.length - 3} more` : '';
+        throw new ConflictException(`Cannot delete folder '${folderPath}' because it contains files: ${fileList}${moreFiles}. Please delete all files in the folder first.`);
       }
 
       // Delete the folder

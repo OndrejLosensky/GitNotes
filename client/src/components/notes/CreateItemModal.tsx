@@ -6,7 +6,7 @@ import apiClient from '../../api/client';
 interface CreateItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (createdPath?: string) => void;
   notesTree: TreeNode[];
 }
 
@@ -76,21 +76,27 @@ export default function CreateItemModal({ isOpen, onClose, onSuccess, notesTree 
       if (itemType === 'note') {
         // Ensure the name ends with .md
         const noteName = itemName.endsWith('.md') ? itemName : `${itemName}.md`;
+        const fullPath = selectedPath ? `${selectedPath}/${noteName}` : noteName;
         
         await apiClient.post('/notes', {
           name: noteName,
           path: selectedPath || '', // Empty string if root
           content: ' ', // Single space to satisfy the "not empty" requirement
         });
+        
+        onSuccess(fullPath);
       } else {
         // For folders, use the folders endpoint
+        const fullPath = selectedPath ? `${selectedPath}/${itemName}` : itemName;
+        
         await apiClient.post('/notes/folders', {
           name: itemName,
           parentPath: selectedPath || '',
         });
+        
+        onSuccess(fullPath);
       }
       
-      onSuccess();
       onClose();
     } catch (error: any) {
       console.error('Create error:', error);

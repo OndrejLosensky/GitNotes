@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../../../api/client';
+import { useAppContext } from '../../../contexts/AppContext';
 
 interface NoteContent {
   name: string;
@@ -14,6 +15,7 @@ interface NoteContent {
 export default function NotePage() {
   const { '*': notePath } = useParams();
   const navigate = useNavigate();
+  const { triggerRefresh } = useAppContext();
   const [note, setNote] = useState<NoteContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -71,6 +73,8 @@ export default function NotePage() {
       await apiClient.put(`/notes/${notePath}`, { content: editContent });
       setNote({ ...note!, content: editContent });
       setIsEditing(false);
+      // Trigger refresh to update git status in notes tree
+      triggerRefresh('notes');
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to update note');
     }
@@ -82,6 +86,8 @@ export default function NotePage() {
 
     try {
       await apiClient.delete(`/notes/${notePath}`);
+      // Trigger refresh of notes tree before navigating
+      triggerRefresh('notes');
       navigate('/dashboard');
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to delete note');
@@ -97,6 +103,8 @@ export default function NotePage() {
       // Refresh note to update git status
       const response = await apiClient.get(`/notes/content/${notePath}`);
       setNote(response.data);
+      // Trigger refresh to update git status in notes tree
+      triggerRefresh('notes');
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to stage file');
     } finally {
@@ -113,6 +121,8 @@ export default function NotePage() {
       // Refresh note to update git status
       const response = await apiClient.get(`/notes/content/${notePath}`);
       setNote(response.data);
+      // Trigger refresh to update git status in notes tree
+      triggerRefresh('notes');
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to unstage file');
     } finally {

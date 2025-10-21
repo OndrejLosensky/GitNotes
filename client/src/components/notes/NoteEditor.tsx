@@ -57,16 +57,15 @@ export default function NoteEditor({ content, onSave, onCancel, saving = false }
           onClick={onCancel}
           className="px-4 py-2 rounded-md text-sm"
           style={{
-            backgroundColor: 'var(--text-secondary)',
-            color: 'white',
+            backgroundColor: 'var(--bg-tertiary)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border-color)',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--text-primary)';
-            e.currentTarget.style.opacity = '0.9';
+            e.currentTarget.style.backgroundColor = 'var(--sidebar-hover)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--text-secondary)';
-            e.currentTarget.style.opacity = '1';
+            e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
           }}
         >
           Cancel

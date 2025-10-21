@@ -1,59 +1,46 @@
 # GitNotes Server
 
-NestJS backend for the GitNotes application.
+NestJS backend API with Git integration and file-based note storage.
 
-## Setup
+## Overview
 
-1. Install dependencies:
-```bash
-pnpm install
+RESTful API server handling authentication, note management, and Git operations.
+
+## Key Features
+
+- **Authentication** - JWT-based auth
+- **Notes API** - CRUD operations for markdown files
+- **Git Operations** - Status, commit, push, pull, branches
+- **File System** - Direct markdown file storage
+- **Real-time Sync** - Git repository synchronization
+
+## Tech Stack
+
+- NestJS
+- TypeScript
+- simple-git
+- JWT/Passport
+- Winston Logger
+
+## Development
+
+See [install.md](../install.md) for setup instructions.
+
+## Project Structure
+
+```
+src/
+├── modules/
+│   ├── auth/        # Authentication
+│   ├── notes/       # Note management
+│   └── git/         # Git operations
+├── common/          # Shared utilities
+│   ├── filters/     # Exception filters
+│   ├── interceptors/# Request/response interceptors
+│   └── guards/      # Auth guards
+└── config/          # Configuration
 ```
 
-2. Configure environment variables:
-   - Copy `.env.example` to `.env`
-   - Update the values:
-     - `GITHUB_TOKEN`: Your GitHub personal access token
-     - `GITHUB_REPO_URL`: URL of your notes repository
-     - `AUTH_PASSWORD`: Hashed password (see below)
-     - `JWT_SECRET`: Random secret string for JWT signing
-     - `NOTES_PATH`: Path where notes will be cloned (default: `./data/notes`)
-     - `PORT`: Server port (default: 3001)
+## API Documentation
 
-3. Generate hashed password:
-```bash
-pnpm ts-node scripts/hash-password.ts your_password_here
-```
-Copy the output and use it as `AUTH_PASSWORD` in `.env`
-
-## Running
-
-Development mode:
-```bash
-pnpm start:dev
-```
-
-Production mode:
-```bash
-pnpm build
-pnpm start:prod
-```
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/login` - Login with password
-  - Body: `{ "password": "your_password" }`
-  - Returns: `{ "access_token": "jwt_token" }`
-
-### Git Operations
-- `POST /api/git/pull` - Pull latest changes from GitHub (Protected)
-
-### Notes
-- `GET /api/notes` - Get list of markdown files (Protected)
-
-## How It Works
-
-1. On startup, the server clones the configured GitHub repository to `NOTES_PATH`
-2. If already cloned, it skips the clone operation
-3. You can trigger a `git pull` via the API to sync new notes
-4. The notes endpoint reads all `.md` files from the cloned repository
+See [api.md](./api.md) for endpoint documentation.

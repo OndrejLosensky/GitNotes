@@ -1,46 +1,43 @@
 # GitNotes Client
 
-React frontend for the GitNotes application.
+React frontend application built with TypeScript and Vite.
 
-## Setup
+## Overview
 
-1. Install dependencies:
-```bash
-pnpm install
+Modern, VSCode-like interface for managing markdown notes with Git integration.
+
+## Key Features
+
+- **Note Editor** - Markdown editing with syntax support
+- **File Tree** - Hierarchical folder structure navigation
+- **Search** - Find notes by title or content
+- **Git Integration** - View history, commits, and changes
+- **Real-time Preview** - Live markdown rendering
+
+## Tech Stack
+
+- React 18
+- TypeScript
+- Vite
+- Context API
+- CSS Modules
+
+## Development
+
+See [install.md](../install.md) for setup instructions.
+
+## Project Structure
+
 ```
-
-2. The client is configured to connect to the backend at `http://localhost:3001`
-
-## Running
-
-Development mode:
-```bash
-pnpm dev
+src/
+├── components/     # UI components
+│   ├── common/     # Shared components
+│   ├── git/        # Git-related components
+│   ├── notes/      # Note management
+│   └── layout/     # Layout components
+├── pages/          # Page components
+├── hooks/          # Custom React hooks
+├── contexts/       # Context providers
+├── api/            # API client
+└── styles/         # Global styles
 ```
-
-The application will be available at `http://localhost:5173`
-
-Build for production:
-```bash
-pnpm build
-```
-
-Preview production build:
-```bash
-pnpm preview
-```
-
-## Features
-
-- **Login Page**: Simple password authentication
-- **Notes List**: View all markdown files from your GitHub repository
-- **Pull Latest**: Manually sync with GitHub to get new notes
-
-## Usage
-
-1. Start the backend server first
-2. Run the frontend with `pnpm dev`
-3. Navigate to `http://localhost:5173`
-4. Login with your configured password
-5. View your notes and use "Pull Latest" to sync from GitHub
-

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from 'react';
 import { type TabType, type TreeNode, type GitStatus } from '../types';
 
 type RefreshType = 'notes' | 'commits' | 'all';
@@ -15,6 +15,9 @@ interface AppContextType {
   // New refresh system
   registerRefreshCallback: (type: RefreshType, callback: () => void) => void;
   triggerRefresh: (type: RefreshType) => void;
+  // Sidebar state
+  sidebarCollapsed: boolean;
+  toggleSidebar: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -23,6 +26,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeTab, setActiveTab] = useState<TabType>('notes');
   const [notesTree, setNotesTree] = useState<TreeNode[]>([]);
   const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
+  
+  // Sidebar state with localStorage persistence
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  // Persist sidebar state
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed(prev => !prev);
+  }, []);
   
   // Use refs to avoid infinite re-renders
   const refreshCallbacksRef = useRef<{
@@ -76,6 +94,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         refreshGitStatus,
         registerRefreshCallback,
         triggerRefresh,
+        sidebarCollapsed,
+        toggleSidebar,
       }}
     >
       {children}

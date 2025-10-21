@@ -1,6 +1,6 @@
 {
-  "name": "gitnotes",
-  "version": "0.0.0",
+  "name": "gitnotes-server",
+  "version": "1.0.0",
   "description": "Git-controlled note-taking application",
   "private": true,
   "scripts": {

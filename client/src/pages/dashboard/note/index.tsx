@@ -23,6 +23,7 @@ export default function NotePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
   const [staging, setStaging] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -44,6 +45,33 @@ export default function NotePage() {
     fetchNote();
   }, [notePath]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + S to save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (isEditing) {
+          handleSave();
+        }
+      }
+      // Ctrl/Cmd + E to toggle edit mode
+      if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        e.preventDefault();
+        if (!isEditing) {
+          handleEdit();
+        }
+      }
+      // ESC to exit edit mode
+      if (e.key === 'Escape' && isEditing) {
+        setIsEditing(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isEditing, editContent, notePath]);
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -60,6 +88,41 @@ export default function NotePage() {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const renderMarkdown = (text: string) => {
+    if (!text.trim()) return <div className="text-gray-500 italic">No content yet. Click Edit to start writing.</div>;
+    
+    return (
+      <div className="prose prose-sm max-w-none">
+        {text.split('\n').map((line, index) => {
+          // Headers
+          if (line.startsWith('# ')) return <h1 key={index} className="text-xl font-bold mb-2">{line.slice(2)}</h1>;
+          if (line.startsWith('## ')) return <h2 key={index} className="text-lg font-bold mb-2">{line.slice(3)}</h2>;
+          if (line.startsWith('### ')) return <h3 key={index} className="text-base font-bold mb-2">{line.slice(4)}</h3>;
+          
+          // Bold
+          if (line.startsWith('**') && line.endsWith('**')) {
+            return <p key={index} className="mb-2"><strong>{line.slice(2, -2)}</strong></p>;
+          }
+          
+          // Italic
+          if (line.startsWith('*') && line.endsWith('*') && !line.startsWith('**')) {
+            return <p key={index} className="mb-2"><em>{line.slice(1, -1)}</em></p>;
+          }
+          
+          // Lists
+          if (line.startsWith('- ')) return <li key={index} className="mb-1">{line.slice(2)}</li>;
+          if (line.startsWith('* ')) return <li key={index} className="mb-1">{line.slice(2)}</li>;
+          
+          // Empty line
+          if (line.trim() === '') return <br key={index} />;
+          
+          // Regular paragraph
+          return <p key={index} className="mb-2">{line}</p>;
+        })}
+      </div>
+    );
   };
 
   const handleEdit = () => {
@@ -84,13 +147,13 @@ export default function NotePage() {
 
   const handleDelete = async () => {
     if (!notePath) return;
-    if (!confirm('Are you sure you want to delete this note?')) return;
 
     try {
       await apiClient.delete(`/notes/${notePath}`);
-      // Trigger refresh of notes tree before navigating
-      triggerRefresh('notes');
+      // Navigate first to prevent any issues
       navigate('/dashboard');
+      // Then trigger refresh of notes tree
+      triggerRefresh('notes');
     } catch (err: any) {
       showError(err.response?.data?.message || 'Failed to delete note');
     }
@@ -258,7 +321,7 @@ export default function NotePage() {
 
                 {/* Delete button */}
                 <button
-                  onClick={handleDelete}
+                  onClick={() => setShowDeleteModal(true)}
                   className="p-2 rounded-md transition-colors"
                   style={{ color: 'var(--text-tertiary)' }}
                   onMouseEnter={(e) => {
@@ -319,31 +382,100 @@ export default function NotePage() {
       {/* Content area */}
       <div className="flex-1 overflow-hidden">
         {isEditing ? (
-          <div className="h-full flex flex-col">
-            <div className="flex-1 p-6">
-              <textarea
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                className="w-full h-full px-4 py-3 border rounded-md font-mono text-sm resize-none focus:outline-none focus:ring-2"
-                style={{
-                  backgroundColor: 'var(--bg-secondary)',
-                  borderColor: 'var(--border-color)',
-                  color: 'var(--text-primary)',
-                }}
-                placeholder="Start writing your note..."
-              />
-            </div>
+          <div className="h-full p-6">
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              placeholder="Start writing your note..."
+              className="w-full h-full resize-none focus:outline-none font-mono text-sm"
+              style={{
+                backgroundColor: 'var(--bg-primary)',
+                color: 'var(--text-primary)',
+                border: 'none'
+              }}
+            />
           </div>
         ) : (
-          <div className="h-full overflow-y-auto p-6">
-            <div className="max-w-none">
-              <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-                {note.content || 'No content yet. Click Edit to start writing.'}
-              </pre>
-            </div>
+          <div 
+            className="h-full overflow-y-auto p-6"
+            style={{
+              backgroundColor: 'var(--bg-primary)',
+              color: 'var(--text-primary)'
+            }}
+          >
+            {renderMarkdown(note.content || '')}
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+        >
+          <div 
+            className="rounded-lg shadow-xl w-96 max-w-[90vw]"
+            style={{ backgroundColor: 'var(--bg-primary)' }}
+          >
+            {/* Header */}
+            <div 
+              className="px-6 py-4 border-b"
+              style={{ borderColor: 'var(--border-color)' }}
+            >
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                Delete Note
+              </h2>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-4">
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Are you sure you want to delete "{note?.name}"? This action cannot be undone.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div 
+              className="px-6 py-4 border-t flex justify-end gap-3"
+              style={{ borderColor: 'var(--border-color)' }}
+            >
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-sm transition-colors"
+                style={{ color: 'var(--text-secondary)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--text-primary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--text-secondary)';
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  handleDelete();
+                }}
+                className="px-4 py-2 text-sm rounded-md transition-colors"
+                style={{ 
+                  backgroundColor: 'var(--color-error)',
+                  color: 'white'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '0.9';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '1';
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

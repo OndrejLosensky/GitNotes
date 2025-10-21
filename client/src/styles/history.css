@@ -1,0 +1,45 @@
+/* History Page Styles */
+
+/* Two-panel layout utilities */
+.history-layout {
+  @apply h-full flex;
+}
+
+.history-commit-list {
+  @apply w-80 border-r border-gray-200 flex flex-col bg-white;
+}
+
+.history-commit-detail {
+  @apply flex-1 bg-white overflow-hidden;
+}
+
+/* Diff view utilities */
+.diff-line-add {
+  @apply bg-green-50 text-green-800;
+}
+
+.diff-line-remove {
+  @apply bg-red-50 text-red-800;
+}
+
+.diff-line-context {
+  @apply bg-white text-gray-700;
+}
+
+.diff-line-number {
+  @apply inline-block w-12 px-2 text-right text-gray-500 select-none;
+}
+
+/* Ensure code blocks don't wrap */
+.diff-content {
+  @apply font-mono text-xs whitespace-pre;
+}
+
+/* Line clamp utility for commit messages */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+

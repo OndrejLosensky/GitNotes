@@ -3,9 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import simpleGit, { SimpleGit } from 'simple-git';
 import * as fs from 'fs';
 import * as path from 'path';
-import { PullResultDto, GitStatusDto, GitHistoryDto, BranchListDto, BranchDto } from './dto';
+import { PullResultDto, GitStatusDto, GitHistoryDto, BranchListDto, BranchDto, CommitDetailsDto } from './dto';
 import { GitFileStatusEntity } from './entities/git-file-status.entity';
 import { CommitEntity } from './entities/commit.entity';
+import { FileDiffEntity, DiffChunk, DiffLine } from './entities/file-diff.entity';
 import { ERROR_MESSAGES } from '../../core/constants/error-messages.const';
 
 @Injectable()
@@ -546,5 +547,160 @@ export class GitService implements OnModuleInit {
 
   getNotesPath(): string {
     return path.resolve(this.notesPath);
+  }
+
+  async getCommitDetails(hash: string): Promise<CommitDetailsDto> {
+    try {
+      this.logger.log(`Getting commit details for: ${hash}`);
+      
+      // Get commit information using show command instead of log
+      const showResult = await this.git.show([hash, '--format=%H|%an <%ae>|%ai|%s|%D', '--no-patch']);
+      
+      if (!showResult || showResult.trim().length === 0) {
+        throw new Error(`Commit ${hash} not found`);
+      }
+
+      // Parse the show result
+      const parts = showResult.trim().split('|');
+      if (parts.length < 4) {
+        throw new Error(`Invalid commit format for ${hash}`);
+      }
+
+      const commit = {
+        hash: parts[0],
+        author: parts[1],
+        date: parts[2],
+        message: parts[3],
+        refs: parts[4] || undefined
+      };
+
+      // Get diff stats
+      const diffSummary = await this.git.diffSummary([`${hash}^`, hash]);
+      
+      // Get full diff with context
+      const diffResult = await this.git.diff([`${hash}^`, hash]);
+      
+      // Parse the diff
+      const files = this.parseDiff(diffResult, diffSummary.files);
+
+      const totalAdditions = files.reduce((sum, f) => sum + f.additions, 0);
+      const totalDeletions = files.reduce((sum, f) => sum + f.deletions, 0);
+
+      this.logger.log(`Retrieved details for commit ${hash.substring(0, 7)}: ${files.length} files changed`);
+
+      return new CommitDetailsDto({
+        hash: commit.hash,
+        author: commit.author,
+        date: commit.date,
+        message: commit.message,
+        refs: commit.refs,
+        filesChanged: files.length,
+        additions: totalAdditions,
+        deletions: totalDeletions,
+        files
+      });
+    } catch (error) {
+      this.logger.error(`Failed to get commit details for ${hash}`, error);
+      throw error;
+    }
+  }
+
+  private parseDiff(diffOutput: string, fileSummary: any[]): FileDiffEntity[] {
+    const files: FileDiffEntity[] = [];
+    
+    // Handle empty diff output
+    if (!diffOutput || diffOutput.trim().length === 0) {
+      return files;
+    }
+    
+    const fileDiffs = diffOutput.split(/^diff --git /m).filter(Boolean);
+
+    for (const fileDiff of fileDiffs) {
+      const lines = fileDiff.split('\n');
+      
+      // Extract file path from the first line (e.g., "a/path/to/file b/path/to/file")
+      const pathMatch = lines[0].match(/a\/(.*?) b\/(.*)/);
+      if (!pathMatch) continue;
+      
+      const filePath = pathMatch[2];
+      
+      // Find stats for this file
+      const stats = fileSummary.find(f => f.file === filePath);
+      const additions = stats?.insertions || 0;
+      const deletions = stats?.deletions || 0;
+
+      // Parse chunks
+      const chunks = this.parseChunks(lines);
+
+      files.push(new FileDiffEntity({
+        path: filePath,
+        additions,
+        deletions,
+        chunks
+      }));
+    }
+
+    return files;
+  }
+
+  private parseChunks(lines: string[]): DiffChunk[] {
+    const chunks: DiffChunk[] = [];
+    let currentChunk: DiffChunk | null = null;
+    let oldLineNum = 0;
+    let newLineNum = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // Detect chunk header (e.g., "@@ -10,7 +10,8 @@")
+      const chunkMatch = line.match(/^@@ -(\d+),?(\d*) \+(\d+),?(\d*) @@/);
+      if (chunkMatch) {
+        // Save previous chunk
+        if (currentChunk) {
+          chunks.push(currentChunk);
+        }
+
+        // Start new chunk
+        const oldStart = parseInt(chunkMatch[1], 10);
+        const oldLines = chunkMatch[2] ? parseInt(chunkMatch[2], 10) : 1;
+        const newStart = parseInt(chunkMatch[3], 10);
+        const newLines = chunkMatch[4] ? parseInt(chunkMatch[4], 10) : 1;
+
+        oldLineNum = oldStart;
+        newLineNum = newStart;
+
+        currentChunk = {
+          oldStart,
+          oldLines,
+          newStart,
+          newLines,
+          lines: []
+        };
+        continue;
+      }
+
+      // Parse diff lines (only if we're in a chunk)
+      if (currentChunk && (line.startsWith('+') || line.startsWith('-') || line.startsWith(' '))) {
+        const diffLine: DiffLine = {
+          type: line[0] === '+' ? 'add' : line[0] === '-' ? 'remove' : 'context',
+          content: line.substring(1),
+          oldLineNumber: line[0] !== '+' ? oldLineNum : undefined,
+          newLineNumber: line[0] !== '-' ? newLineNum : undefined
+        };
+
+        currentChunk.lines.push(diffLine);
+
+        // Update line numbers
+        if (line[0] !== '+') oldLineNum++;
+        if (line[0] !== '-') newLineNum++;
+      }
+    }
+
+    // Save last chunk
+    if (currentChunk) {
+      chunks.push(currentChunk);
+    }
+
+    return chunks;
   }
 }

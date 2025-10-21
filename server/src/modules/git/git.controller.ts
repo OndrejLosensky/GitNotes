@@ -21,6 +21,7 @@ import {
   CreateCommitDto,
   CommitResponseDto,
   GitHistoryDto,
+  CommitDetailsDto,
   BranchListDto,
   BranchDto,
   CreateBranchDto,
@@ -108,6 +109,19 @@ export class GitController {
   async getHistory(@Query('limit') limit?: string): Promise<GitHistoryDto> {
     const limitNumber = limit ? Math.min(parseInt(limit, 10) || 10, 50) : 10;
     return await this.gitService.getCommitHistory(limitNumber);
+  }
+
+  @Get('commits/:hash')
+  @HttpCode(HttpStatus.OK)
+  async getCommitDetails(@Param('hash') hash: string): Promise<CommitDetailsDto> {
+    try {
+      return await this.gitService.getCommitDetails(hash);
+    } catch (error) {
+      throw new HttpException(
+        error instanceof Error ? error.message : 'Failed to get commit details',
+        HttpStatus.NOT_FOUND,
+      );
+    }
   }
 
   @Get('branches')

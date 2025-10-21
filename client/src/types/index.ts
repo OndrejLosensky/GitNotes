@@ -39,6 +39,40 @@ export interface CommitInfo {
   date: string;
 }
 
+export interface DiffLine {
+  type: 'add' | 'remove' | 'context';
+  content: string;
+  oldLineNumber?: number;
+  newLineNumber?: number;
+}
+
+export interface DiffChunk {
+  oldStart: number;
+  oldLines: number;
+  newStart: number;
+  newLines: number;
+  lines: DiffLine[];
+}
+
+export interface FileDiff {
+  path: string;
+  additions: number;
+  deletions: number;
+  chunks: DiffChunk[];
+}
+
+export interface CommitDetails {
+  hash: string;
+  author: string;
+  date: string;
+  message: string;
+  refs?: string;
+  filesChanged: number;
+  additions: number;
+  deletions: number;
+  files: FileDiff[];
+}
+
 export interface Branch {
   name: string;
   current: boolean;
